@@ -1,0 +1,24 @@
+Folder PATH listing for volume OS
+Volume serial number is 9A38-7E98
+C:.
+    city_planning_and_housing.png
+    ecology_and_green_spaces.png
+    education_and_culture.png
+    environment_and_disaster.png
+    file.svg
+    globe.svg
+    government_and_public_policy.png
+    infrastructure_and_transportation.png
+    jakarta-insight-logo.png
+    next.svg
+    public_health.png
+    safety_and_crime.png
+    social_and_economy.png
+    technology_and_innovation.png
+    tourism_and_entertainment.png
+    tree.txt
+    vercel.svg
+    window.svg
+    
+No subfolders exist 
+

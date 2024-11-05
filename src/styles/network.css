@@ -1,0 +1,22 @@
+
+.react-flow__node {
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 12px;
+}
+
+.react-flow__node-user {
+  background-color: #6366f1;
+  color: white;
+}
+
+.react-flow__node-hashtag {
+  background-color: #22c55e;
+  color: white;
+}
+
+.react-flow__node-mention {
+  background-color: #ef4444;
+  color: white;
+}
