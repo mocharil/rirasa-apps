@@ -151,7 +151,7 @@ export function NetworkAnalysis({ data }: NetworkAnalysisProps) {
       contextual_content: `Tweet ini dari ${tweet.username} dengan topik ${tweet.topic_classification} dan sentiment ${tweet.sentiment}`
     }));
 
-    const response = await fetch('http://34.101.213.23:7777/summarize/', {
+    const response = await fetch('https://34.101.213.23:7777/summarize/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
