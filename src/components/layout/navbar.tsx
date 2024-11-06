@@ -14,6 +14,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { 
+  LayoutDashboard, 
+  LineChart, 
+  MessagesSquare,
+  User,
+  Settings,
+  LogOut 
+} from "lucide-react"
 
 export function Navbar() {
   return (
@@ -35,6 +43,7 @@ export function Navbar() {
               <NavigationMenuItem>
                 <Link href="/dashboard" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
                     Dashboard
                   </NavigationMenuLink>
                 </Link>
@@ -42,20 +51,15 @@ export function Navbar() {
               <NavigationMenuItem>
                 <Link href="/analytics" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    <LineChart className="mr-2 h-4 w-4" />
                     Analytics
-                  </NavigationMenuLink>
-                </Link>
-              </NavigationMenuItem>
-              <NavigationMenuItem>
-                <Link href="/social-monitoring" legacyBehavior passHref>
-                  <NavigationMenuLink className={navigationMenuTriggerStyle()}>
-                    Social Monitoring
                   </NavigationMenuLink>
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
                 <Link href="/citizen-engagement" legacyBehavior passHref>
                   <NavigationMenuLink className={navigationMenuTriggerStyle()}>
+                    <MessagesSquare className="mr-2 h-4 w-4" />
                     Citizen Engagement
                   </NavigationMenuLink>
                 </Link>
@@ -75,9 +79,18 @@ export function Navbar() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end">
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Settings</DropdownMenuItem>
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem>
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Settings className="mr-2 h-4 w-4" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-red-600">
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

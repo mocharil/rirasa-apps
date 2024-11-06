@@ -11,30 +11,52 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const region = searchParams.get('region') || 'Jakarta Pusat';
-
-    // Build query dynamically based on region
+    console.log("ambil data")
     const mustQuery = region === 'All Data' ? [] : [
-      {
-        match: {
-          'affected_region.keyword': region
+        {
+          match: {
+            'affected_region.keyword': region
+          }
         }
-      }
-    ];
+      ];
+      
+      const result = await client.search({
+        index: 'twitter_jakarta',
+        size: 100,
+        _source: ['username', 'hastags', 'mentions'],
+        query: {
+          bool: {
+            must: [
+              ...mustQuery, // Spread the mustQuery array here
+              {
+                range: {
+                  date: {
+                    gte: "now-7d/d",
+                    lte: "now"
+                  }
+                }
+              }
+            ],
+            should: [
+              {
+                bool: {
+                  must: [{ exists: { field: 'hastags' } },
+                         { exists: { field: 'mentions' } }],
+                
+                }
+              }
+            ],
+            minimum_should_match: 1
+          }
+        },
+        sort: [{ date: "desc" }]
+      });
+      
+      
 
-    const result = await client.search({
-      index: 'twitter_jakarta',
-      size: 10000,
-      query: {
-        bool: {
-          must: mustQuery,
-          filter: [
-            { exists: { field: 'hastags' } },
-            { exists: { field: 'mentions' } }
-          ]
-        }
-      },
-      sort: [{ "date": "desc" }]
-    });
+
+    console.log("Olah Data Network")
+    console.log(mustQuery)
 
     const nodes: Node[] = [];
     const edges: Edge[] = [];

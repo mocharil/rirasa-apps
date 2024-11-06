@@ -1,11 +1,57 @@
-// src/app/api/analytics/user-tweets/route.ts
 import { NextResponse } from 'next/server';
 import { Client } from '@elastic/elasticsearch';
-import type { SortOrder } from '@elastic/elasticsearch/lib/api/types'; // Import tipe SortOrder
+import type { SortOrder } from '@elastic/elasticsearch/lib/api/types';
+
+interface TweetSource {
+  username: string;
+  full_text: string;
+  created_at: string;
+  topic_classification?: string;
+  sentiment?: string;
+  urgency_level?: number;
+  target_audience?: string[];
+  link_post?: string;
+  mentions?: string | string[];
+  hastags?: string | string[];
+}
 
 const client = new Client({
-  node: 'http://57.155.112.231:9200'
-});
+    node: 'http://57.155.112.231:9200',
+    requestTimeout: 30000,
+    maxRetries: 3,
+    tls: {
+      rejectUnauthorized: false
+    }
+  });
+
+// Helper function to ensure array type
+const ensureArray = (value: unknown): string[] => {
+  if (Array.isArray(value)) {
+    return value.map(item => String(item));
+  }
+  if (typeof value === 'string') {
+    return [value];
+  }
+  return [];
+};
+
+// Helper function to format mentions
+const formatMentions = (mentions: unknown): string[] => {
+  const mentionsArray = ensureArray(mentions);
+  return mentionsArray.map(mention => {
+    const cleanMention = String(mention).replace(/^@+/, '');
+    return `@${cleanMention}`;
+  });
+};
+
+// Helper function to format hashtags
+const formatHashtags = (hashtags: unknown): string[] => {
+  const hashtagsArray = ensureArray(hashtags);
+  return hashtagsArray.map(hashtag => {
+    const cleanHashtag = String(hashtag).replace(/^#+/, '');
+    return `#${cleanHashtag}`;
+  });
+};
 
 export async function GET(request: Request) {
   let originalUsername = '';
@@ -26,53 +72,42 @@ export async function GET(request: Request) {
 
     // Tentukan jenis node berdasarkan input original
     const nodeType = originalUsername.startsWith('@') ? 'user/mention' :
-                     originalUsername.startsWith('#') ? 'hashtag' : 'user';
+                    originalUsername.startsWith('#') ? 'hashtag' : 'user';
 
     console.log('Node type:', nodeType);
 
-    let searchQuery;
-
-    if (nodeType === 'hashtag') {
-      // Query untuk hashtag
-      searchQuery = {
-        index: 'twitter_jakarta',
-        body: {
-          query: {
-            match: {
-              'hastags': originalUsername
-            }
-          },
-          sort: [{ 'date': { order: 'desc' as const } }], // Gunakan 'as const'
-          size: 20
-        }
-      };
-    } else {
-      // Query untuk user/mention
-      searchQuery = {
-        index: 'twitter_jakarta',
-        body: {
-          query: {
-            bool: {
-              should: [
-                {
-                  match: {
-                    'username': cleanUsername
-                  }
-                },
-                {
-                  match: {
-                    'mentions': originalUsername
-                  }
-                }
-              ],
-              minimum_should_match: 1
-            }
-          },
-          sort: [{ 'date': { order: 'desc' as const } }], // Gunakan 'as const'
-          size: 20
-        }
-      };
-    }
+    const searchQuery = {
+      index: 'twitter_jakarta',
+      _source: [
+        'username',
+        'full_text',
+        'created_at',
+        'topic_classification',
+        'sentiment',
+        'urgency_level',
+        'target_audience',
+        'link_post',
+        'mentions',
+        'hastags'
+      ],
+      body: {
+        query: nodeType === 'hashtag' ? {
+          match: {
+            'hastags': originalUsername
+          }
+        } : {
+          bool: {
+            should: [
+              { match: { 'username': cleanUsername } },
+              { match: { 'mentions': originalUsername } }
+            ],
+            minimum_should_match: 1
+          }
+        },
+        sort: [{ 'date': { order: 'desc' as SortOrder } }],
+        size: 20
+      }
+    };
 
     const result = await client.search(searchQuery);
 
@@ -84,17 +119,14 @@ export async function GET(request: Request) {
           query_term: originalUsername,
           clean_query_term: cleanUsername,
           node_type: nodeType,
-          breakdown: {
-            as_author: 0,
-            as_mentioned: 0,
-            in_hashtag: 0
-          }
+          breakdown: { as_author: 0, as_mentioned: 0, in_hashtag: 0 }
         }
       });
     }
 
     const tweets = result.hits.hits.map((hit: any) => {
-      const source = hit._source;
+      const source = hit._source as TweetSource;
+      
       return {
         username: source.username,
         full_text: source.full_text,
@@ -104,31 +136,27 @@ export async function GET(request: Request) {
         urgency_level: source.urgency_level || 0,
         target_audience: source.target_audience || [],
         link_post: source.link_post,
-        mentions: (source.mentions || []).map((m: string) => `@${m.replace('@', '')}`),
-        hastags: (source.hastags || []).map((h: string) => `#${h.replace('#', '')}`),
+        mentions: formatMentions(source.mentions),
+        hastags: formatHashtags(source.hastags),
         relation_type: nodeType === 'hashtag' ? 'hashtag' :
-                       cleanUsername === source.username ? 'author' :
-                       (source.mentions || []).includes(cleanUsername) ? 'mentioned' : 'unknown'
+                      cleanUsername === source.username ? 'author' :
+                      formatMentions(source.mentions).includes(`@${cleanUsername}`) ? 'mentioned' : 'unknown'
       };
     });
 
     const meta = {
-        total: typeof result.hits.total === 'object' ? result.hits.total.value : result.hits.total || 0,
-        query_term: originalUsername,
-        clean_query_term: cleanUsername,
-        node_type: nodeType,
-        breakdown: {
-          as_author: tweets.filter(t => t.relation_type === 'author').length,
-          as_mentioned: tweets.filter(t => t.relation_type === 'mentioned').length,
-          in_hashtag: tweets.filter(t => t.relation_type === 'hashtag').length
-        }
-      };
-      
+      total: typeof result.hits.total === 'object' ? result.hits.total.value : result.hits.total || 0,
+      query_term: originalUsername,
+      clean_query_term: cleanUsername,
+      node_type: nodeType,
+      breakdown: {
+        as_author: tweets.filter(t => t.relation_type === 'author').length,
+        as_mentioned: tweets.filter(t => t.relation_type === 'mentioned').length,
+        in_hashtag: tweets.filter(t => t.relation_type === 'hashtag').length
+      }
+    };
 
-    return NextResponse.json({ 
-      tweets,
-      meta
-    });
+    return NextResponse.json({ tweets, meta });
 
   } catch (error: any) {
     console.error('Error details:', error);
