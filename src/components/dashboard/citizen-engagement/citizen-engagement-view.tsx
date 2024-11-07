@@ -77,11 +77,11 @@ export function CitizenEngagementView() {
           <CardHeader className="flex flex-row items-center gap-4">
             <img 
               src="/bot jaki.png" 
-              alt="Bot Jaki Logo" 
+              alt="Bot Jaksee Logo" 
               className="w-16 h-16 object-contain"
             />
             <div>
-              <CardTitle>Jakarta Insight Chatbot</CardTitle>
+              <CardTitle>Insight Jakarta Chatbot</CardTitle>
               <CardDescription>
                 Connect with our AI-powered chatbot to get instant information about Jakarta
               </CardDescription>
@@ -100,7 +100,7 @@ export function CitizenEngagementView() {
             <div className="flex items-center justify-center p-4 bg-gray-50 rounded-lg">
               <img 
                 src="/bot jaki.png" 
-                alt="Bot Jaki Preview" 
+                alt="Bot Jaksee Preview" 
                 className="w-32 h-32 object-contain"
               />
             </div>
@@ -109,7 +109,7 @@ export function CitizenEngagementView() {
               className="w-full mt-4 bg-[#0088cc] hover:bg-[#0077b5] flex items-center justify-center"
             >
               <MessageCircle className="mr-2 h-5 w-5" />
-              Chat with Bot Jaki on Telegram
+              Chat with Bot JakSee on Telegram
             </Button>
           </CardContent>
         </Card>

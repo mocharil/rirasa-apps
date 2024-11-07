@@ -430,9 +430,9 @@ export function NetworkAnalysis({ data }: NetworkAnalysisProps) {
                     ctx.strokeStyle = getNodeColor(node);
                     ctx.lineWidth = 1.5;
                     ctx.stroke();
-                    if (node.weight > 5) {
+                    if (node.weight > 9) {
                       const label = node.label;
-                      const fontSize = 14 / globalScale;
+                      const fontSize = 12 / globalScale;
                       ctx.font = `${fontSize}px Sans-Serif`;
                       const textWidth = ctx.measureText(label).width;
                       const bckgDimensions = [textWidth, fontSize].map(n => n + fontSize * 0.2);
@@ -463,8 +463,8 @@ export function NetworkAnalysis({ data }: NetworkAnalysisProps) {
                   linkDirectionalParticleSpeed={0.005}
                   d3AlphaDecay={0.05}
                   d3VelocityDecay={0.3}
-                  width={800}
-                  height={600}
+                  width={1200}
+                  height={700}
                 />
               )}
             </div>

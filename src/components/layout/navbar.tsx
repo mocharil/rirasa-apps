@@ -35,7 +35,7 @@ export function Navbar() {
               className="h-10 w-auto"
             />
             <span className="hidden font-bold sm:inline-block">
-              Jakarta Insight
+              Insight Jakarta 
             </span>
           </Link>
           <NavigationMenu>
