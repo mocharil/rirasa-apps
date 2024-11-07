@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       
       const result = await client.search({
         index: 'twitter_jakarta',
-        size: 100,
+        size: 1000,
         _source: ['username', 'hastags', 'mentions'],
         query: {
           bool: {
