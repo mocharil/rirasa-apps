@@ -62,143 +62,152 @@ const getTopicImage = (topic: string): string => {
     : "/jakarta-insight-logo.png"
 }
 
+// Helper function untuk memformat teks
+const formatText = (text: string): string => {
+  // Ganti newlines dengan <br> dan buat bold text yang dibungkus **
+  return text
+    .split('\n')
+    .join('<br>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+};
+
 export function RootCauseAnalysis({ activeSource, newsInsight, twitterInsight }: RootCauseProps) {
-    const [currentSlide, setCurrentSlide] = useState(0)
-    const [expanded, setExpanded] = useState(false)
-    const insights = activeSource === 'news' ? newsInsight.insight : twitterInsight.insight
-  
-    const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
-      initial: 0,
-      slides: {
-        perView: 1,
-        spacing: 16,
-      },
-      slideChanged(slider) {
-        setCurrentSlide(slider.track.details.rel)
-      },
-      loop: true,
-      mode: "free-snap",
-    })
-  
-    useEffect(() => {
-      const interval = setInterval(() => {
-        if (instanceRef.current && !expanded) {
-          instanceRef.current.next()
-        }
-      }, 10000)
-  
-      return () => clearInterval(interval)
-    }, [instanceRef, expanded])
-  
-    const handleExpandClick = (e: React.MouseEvent) => {
-      setExpanded(!expanded)
-    }
-  
-    const handleCarouselClick = (e: React.MouseEvent) => {
-      e.stopPropagation() // Prevent card expansion when interacting with carousel
-    }
+  const [currentSlide, setCurrentSlide] = useState(0)
+  const [expanded, setExpanded] = useState(false)
+  const insights = activeSource === 'news' ? newsInsight.insight : twitterInsight.insight
 
-    return (
-        <Card 
-          className={`bg-[#f2c0b8] text-black overflow-hidden relative transition-all duration-300 ${expanded ? 'h-auto' : 'h-[280px]'} cursor-pointer hover:bg-[#edb5ad]`}
-        >
-          <div 
-            className="p-6 h-full"
-            onClick={handleExpandClick}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <BarChart2 className="h-5 w-5" />
-                <h2 className="text-xl font-semibold">Root Cause Analysis</h2>
-              </div>
-              <ChevronDown 
-                className={`h-5 w-5 transition-transform duration-300 ${
-                  expanded ? 'rotate-180' : ''
-                }`}
-              />
-            </div>
-    
-            {/* Carousel Container */}
-            <div className="relative" onClick={handleCarouselClick}>
-              <div ref={sliderRef} className="keen-slider">
-                {insights.map((item, index) => (
-                  <div 
-                    key={index} 
-                    className="keen-slider__slide"
-                  >
-                    <CompactInsightCard 
-                      item={item} 
-                      expanded={expanded}
-                    />
-                  </div>
-                ))}
-              </div>
-    
-              {/* Navigation Buttons */}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  instanceRef.current?.prev()
-                }}
-                className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-black/10 rounded-full p-2 backdrop-blur-sm hover:bg-black/20 transition-colors z-10"
-              >
-                <ChevronLeft className="h-6 w-6" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  instanceRef.current?.next()
-                }}
-                className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-black/10 rounded-full p-2 backdrop-blur-sm hover:bg-black/20 transition-colors z-10"
-              >
-                <ChevronRight className="h-6 w-6" />
-              </button>
-    
-              {/* Dots */}
-              <div 
-                className="flex justify-center gap-2 mt-4" 
-                onClick={e => e.stopPropagation()}
-              >
-                {insights.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      instanceRef.current?.moveToIdx(idx)
-                    }}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      currentSlide === idx ? 'bg-black' : 'bg-black/30'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+  const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
+    initial: 0,
+    slides: {
+      perView: 1,
+      spacing: 16,
+    },
+    slideChanged(slider) {
+      setCurrentSlide(slider.track.details.rel)
+    },
+    loop: true,
+    mode: "free-snap",
+  })
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (instanceRef.current && !expanded) {
+        instanceRef.current.next()
+      }
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [instanceRef, expanded])
+
+  const handleExpandClick = (e: React.MouseEvent) => {
+    setExpanded(!expanded)
+  }
+
+  const handleCarouselClick = (e: React.MouseEvent) => {
+    e.stopPropagation() // Prevent card expansion when interacting with carousel
+  }
+
+  return (
+    <Card 
+      className={`bg-[#f2c0b8] text-black overflow-hidden relative transition-all duration-300 ${expanded ? 'h-auto' : 'h-[280px]'} cursor-pointer hover:bg-[#edb5ad]`}
+    >
+      <div 
+        className="p-6 h-full"
+        onClick={handleExpandClick}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BarChart2 className="h-5 w-5" />
+            <h2 className="text-xl font-semibold">Root Cause Analysis</h2>
           </div>
-        </Card>
-      )
-    }
+          <ChevronDown 
+            className={`h-5 w-5 transition-transform duration-300 ${
+              expanded ? 'rotate-180' : ''
+            }`}
+          />
+        </div>
 
-    function CompactInsightCard({ item, expanded }: { item: InsightItem; expanded: boolean }) {
-        const topicImage = getTopicImage(item.topic)
-      
-        return (
-          <div 
-            className="bg-white/10 rounded-lg p-6 backdrop-blur-sm"
-            onClick={e => e.stopPropagation()} // Prevent expansion when interacting with card content
-          >
-            <div className={`flex gap-6 transition-all duration-300 ${expanded ? 'flex-row' : 'flex-row items-center'}`}>
-              {/* Image Section */}
-              <div className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 ${
-                expanded ? 'w-80 h-64' : 'w-40 h-32'
-              }`}>
-                <Image
-                  src={topicImage}
-                  alt={item.topic}
-                  fill
-                  className="object-cover"
+        {/* Carousel Container */}
+        <div className="relative" onClick={handleCarouselClick}>
+          <div ref={sliderRef} className="keen-slider">
+            {insights.map((item, index) => (
+              <div 
+                key={index} 
+                className="keen-slider__slide"
+              >
+                <CompactInsightCard 
+                  item={item} 
+                  expanded={expanded}
                 />
               </div>
+            ))}
+          </div>
+
+          {/* Navigation Buttons */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              instanceRef.current?.prev()
+            }}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-black/10 rounded-full p-2 backdrop-blur-sm hover:bg-black/20 transition-colors z-10"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              instanceRef.current?.next()
+            }}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-black/10 rounded-full p-2 backdrop-blur-sm hover:bg-black/20 transition-colors z-10"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+
+          {/* Dots */}
+          <div 
+            className="flex justify-center gap-2 mt-4" 
+            onClick={e => e.stopPropagation()}
+          >
+            {insights.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  instanceRef.current?.moveToIdx(idx)
+                }}
+                className={`w-2 h-2 rounded-full transition-colors ${
+                  currentSlide === idx ? 'bg-black' : 'bg-black/30'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </Card>
+  )
+}
+
+function CompactInsightCard({ item, expanded }: { item: InsightItem; expanded: boolean }) {
+  const topicImage = getTopicImage(item.topic)
+
+  return (
+    <div 
+      className="bg-white/10 rounded-lg p-6 backdrop-blur-sm"
+      onClick={e => e.stopPropagation()}
+    >
+      <div className={`flex gap-6 transition-all duration-300 ${expanded ? 'flex-row' : 'flex-row items-center'}`}>
+        {/* Image Section */}
+        <div className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 ${
+          expanded ? 'w-80 h-64' : 'w-40 h-32'
+        }`}>
+          <Image
+            src={topicImage}
+            alt={item.topic}
+            fill
+            className="object-cover"
+          />
+        </div>
 
         {/* Content Section */}
         <div className="flex-1 min-w-0">
@@ -226,7 +235,10 @@ export function RootCauseAnalysis({ activeSource, newsInsight, twitterInsight }:
                 <FileText className="h-6 w-auto" />
                 Main Issue
               </div>
-              <p className="text-sm leading-relaxed line-clamp-2">{item.main_issue}</p>
+              <p 
+                className="text-sm leading-relaxed line-clamp-2"
+                dangerouslySetInnerHTML={{ __html: formatText(item.main_issue) }}
+              />
             </div>
           ) : (
             // Expanded View
@@ -236,7 +248,10 @@ export function RootCauseAnalysis({ activeSource, newsInsight, twitterInsight }:
                   <FileText className="h-6 w-auto" />
                   Main Issue
                 </div>
-                <p className="text-base leading-relaxed">{item.main_issue}</p>
+                <p 
+                  className="text-base leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: formatText(item.main_issue) }}
+                />
               </div>
 
               <div>
@@ -244,7 +259,10 @@ export function RootCauseAnalysis({ activeSource, newsInsight, twitterInsight }:
                   <AlertTriangle className="h-6 w-auto" />
                   Problem
                 </div>
-                <p className="text-base leading-relaxed">{item.problem}</p>
+                <p 
+                  className="text-base leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: formatText(item.problem) }}
+                />
               </div>
 
               <div>
@@ -252,7 +270,10 @@ export function RootCauseAnalysis({ activeSource, newsInsight, twitterInsight }:
                   <Lightbulb className="h-6 w-auto" />
                   Suggestion
                 </div>
-                <p className="text-base leading-relaxed">{item.suggestion}</p>
+                <p 
+                  className="text-base leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: formatText(item.suggestion) }}
+                />
               </div>
             </div>
           )}
