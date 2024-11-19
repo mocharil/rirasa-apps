@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { Client } from '@elastic/elasticsearch';
 
 const client = new Client({
-    node: 'http://57.155.112.231:9200'
+    node: 'http://localhost:9200'
 });
 
 export async function GET() {
@@ -33,14 +33,14 @@ export async function GET() {
           total_engagement: {
             sum: {
               script: {
-                source: "doc['favorite_count'].value + doc['retweet_count'].value + doc['reply_count'].value + doc['quote_count'].value"
+                source: "doc['favorite_count'].value + doc['retweet_count'].value + doc['reply_count'].value + doc['views_count'].value"
               }
             }
           },
           // Agregasi untuk pengguna unik
           unique_users: {
             cardinality: {
-              field: "user_id_str"
+              field: "username.keyword"
             }
           },
           // Distribusi sentiment
@@ -137,13 +137,13 @@ export async function GET() {
           total_engagement: {
             sum: {
               script: {
-                source: "doc['favorite_count'].value + doc['retweet_count'].value + doc['reply_count'].value + doc['quote_count'].value"
+                source: "doc['favorite_count'].value + doc['retweet_count'].value + doc['reply_count'].value + doc['views_count'].value"
               }
             }
           },
           unique_users: {
             cardinality: {
-              field: "user_id_str"
+              field:  "username.keyword"
             }
           },
           high_urgency_count: {

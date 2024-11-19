@@ -1,0 +1,116 @@
+
+src:.  
++---app
+�   �   globals.css
+�   �   layout.tsx
+�   �   page.tsx
+�   �   
+�   +---(auth)
+�   �   +---login
+�   �   +---register
+�   +---(dashboard)
+�   �   �   layout.tsx
+�   �   �   
+�   �   +---analytics
+�   �   �       page.tsx
+�   �   �       
+�   �   +---citizen-engagement
+�   �   �       page.tsx
+�   �   �       
+�   �   +---dashboard
+�   �           page.tsx
+�   �           
+�   +---api
+�   �   +---analytics
+�   �   �   +---network
+�   �   �   �       route.ts
+�   �   �   �       
+�   �   �   +---twitter
+�   �   �   �       route.ts
+�   �   �   �       
+�   �   �   +---user-tweets
+�   �   �           route.ts
+�   �   �           
+�   �   +---dashboard
+�   �   �       route.ts
+�   �   �       
+�   �   +---engagement
+�   �   �   �   route.ts
+�   �   �   �   
+�   �   �   +---logs
+�   �   �           route.ts
+�   �   �           
+�   �   +---news
+�   �   �       search.ts
+�   �   �       
+�   �   +---search
+�   �   �       route.ts
+�   �   �       
+�   �   +---trending
+�   �           route.ts
+�   �           
+�   +---fonts
+�           GeistMonoVF.woff
+�           GeistVF.woff
+�           
++---components
+�   +---analytics
+�   �       engagement-metrics.tsx
+�   �       government-insights.tsx
+�   �       network-analysis.tsx
+�   �       sentiment-analysis.tsx
+�   �       topic-distribution.tsx
+�   �       twitter-analytics.tsx
+�   �       
+�   +---dashboard
+�   �   �   filter-bar.tsx
+�   �   �   news-card.tsx
+�   �   �   root-cause-analysis.tsx
+�   �   �   search-bar.tsx
+�   �   �   source-tabs.tsx
+�   �   �   stats-card.tsx
+�   �   �   trending-topics.tsx
+�   �   �   tweet-card.tsx
+�   �   �   
+�   �   +---citizen-engagement
+�   �           chat-logs.tsx
+�   �           citizen-engagement-view.tsx
+�   �           
+�   +---layout
+�   �       footer.tsx
+�   �       navbar.tsx
+�   �       
+�   +---ui
+�           avatar.tsx
+�           badge.tsx
+�           button.tsx
+�           card.tsx
+�           dropdown-menu.tsx
+�           input.tsx
+�           layout.tsx
+�           loading.tsx
+�           navigation-menu.tsx
+�           scroll-area.tsx
+�           select.tsx
+�           sheet.tsx
+�           slider.tsx
+�           table.tsx
+�           tabs.tsx
+�           
++---hooks
+�       use-dashboard-data.ts
+�       use-search.ts
+�       use-twitter-analytics.ts
+�       
++---lib
+�       elasticsearch.ts
+�       types.ts
+�       utils.ts
+�       
++---styles
+�       network.css
+�       
++---types
+        analytics.ts
+        dashboard.ts
+        

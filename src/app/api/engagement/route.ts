@@ -2,7 +2,7 @@ import { Client } from '@elastic/elasticsearch'
 import { NextResponse } from 'next/server'
 
 const client = new Client({
-  node: process.env.ELASTICSEARCH_URL || 'http://57.155.112.231:9200'
+  node: 'http://localhost:9200'
 })
 
 export async function GET() {

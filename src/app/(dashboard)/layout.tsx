@@ -1,4 +1,5 @@
 import { Navbar } from "@/components/layout/navbar"
+import { RequireAuth } from "@/components/auth/require-auth"
 
 export default function DashboardLayout({
   children,
@@ -6,16 +7,13 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="relative min-h-screen">
-      <Navbar />
-      <div className="flex h-[calc(100vh-4rem)]">
-        {/* <Sidebar className="w-64 hidden md:block" /> */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-6">
-            {children}
-          </div>
+    <RequireAuth>
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="container py-6">
+          {children}
         </main>
       </div>
-    </div>
+    </RequireAuth>
   )
 }

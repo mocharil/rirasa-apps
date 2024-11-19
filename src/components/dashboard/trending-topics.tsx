@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, MapPin, Hash, AtSign } from "lucide-react"
+import { TrendingUp, Text , Hash, AtSign } from "lucide-react"
 
 interface LocationItem {
   name: string;
@@ -44,7 +44,7 @@ export function TrendingTopics({ activeSource, twitterInsight, newsTopics }: Tre
     const combinedItems: CombinedTrendItem[] = [
       // Add locations with "Region" prefix
       ...(twitterInsight.total_location?.map(item => ({
-        name: `Region ${item.name}`,
+        name: `${item.name}`,
         total: item.total,
         type: 'location' as const
       })) || []),
@@ -84,7 +84,7 @@ export function TrendingTopics({ activeSource, twitterInsight, newsTopics }: Tre
                 </span>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    {item.type === 'location' && <MapPin className="h-4 w-4 text-blue-500" />}
+                    {item.type === 'location' && <Text  className="h-4 w-4 text-blue-500" />}
                     {item.type === 'hashtag' && <Hash className="h-4 w-4 text-green-500" />}
                     {item.type === 'mention' && <AtSign className="h-4 w-4 text-purple-500" />}
                     <p className="font-medium">

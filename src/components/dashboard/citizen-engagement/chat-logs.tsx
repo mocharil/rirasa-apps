@@ -1,78 +1,60 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { RefreshCw, Search } from "lucide-react"
+import { useEffect, useState } from "react";
+import React from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { RefreshCw, Search } from "lucide-react";
 
 interface ChatLog {
-  user_id: string
-  username: string
-  message_text: string
-  bot_response: string
-  timestamp: string
-  response_time_ms: number
-}
-
-const formatTimeAgo = (timestamp: string) => {
-  const now = new Date()
-  const past = new Date(timestamp)
-  const diffInSeconds = Math.floor((now.getTime() - past.getTime()) / 1000)
-
-  if (diffInSeconds < 60) {
-    return 'just now'
-  }
-
-  const diffInMinutes = Math.floor(diffInSeconds / 60)
-  if (diffInMinutes < 60) {
-    return `${diffInMinutes}m ago`
-  }
-
-  const diffInHours = Math.floor(diffInMinutes / 60)
-  if (diffInHours < 24) {
-    return `${diffInHours}h ago`
-  }
-
-  const diffInDays = Math.floor(diffInHours / 24)
-  if (diffInDays < 30) {
-    return `${diffInDays}d ago`
-  }
-
-  // Format as date for older messages
-  return past.toLocaleDateString()
+  timestamp: string;
+  user_id: string;
+  message_text: string;
+  bot_response: string;
+  response_time_ms: number;
 }
 
 export function ChatLogs() {
-  const [logs, setLogs] = useState<ChatLog[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState("")
-  
+  const [logs, setLogs] = useState<ChatLog[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const fetchLogs = async () => {
     try {
-      setLoading(true)
-      const response = await fetch('/api/engagement/logs?' + new URLSearchParams({
-        search: searchQuery
-      }))
+      setLoading(true);
+      const response = await fetch(
+        `/api/engagement/logs?${new URLSearchParams({ search: searchQuery })}`
+      );
       if (!response.ok) {
-        throw new Error('Failed to fetch chat logs')
+        throw new Error("Failed to fetch chat logs");
       }
-      const data = await response.json()
-      setLogs(data.logs)
-      setError(null)
+      const data = await response.json();
+      setLogs(data.logs);
+      setError(null);
     } catch (error) {
-      console.error('Error fetching logs:', error)
-      setError('Failed to load chat logs')
+      console.error("Error fetching logs:", error);
+      setError("Failed to load chat logs");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchLogs()
-    const interval = setInterval(fetchLogs, 30000)
-    return () => clearInterval(interval)
-  }, [searchQuery])
+    fetchLogs();
+    const interval = setInterval(fetchLogs, 30000);
+    return () => clearInterval(interval);
+  }, [searchQuery]);
+
+  // Format time function
+  const formatTime = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp);
+      return date.toLocaleString();
+    } catch (error) {
+      return "Invalid date";
+    }
+  };
 
   return (
     <Card className="col-span-2">
@@ -85,9 +67,9 @@ export function ChatLogs() {
           <Button
             onClick={fetchLogs}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 text-sm bg-white border rounded-md hover:bg-gray-50"
+            className="justify-center text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border hover:text-accent-foreground h-9 rounded-md px-3 flex items-center bg-black text-white gap-2 border-gray-500 hover:bg-gray-100 hover:shadow-lg"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
         </div>
@@ -110,13 +92,15 @@ export function ChatLogs() {
         ) : (
           <div className="relative overflow-auto max-h-[500px] w-full">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-gray-50">
+              <thead className="bg-gray-50 sticky top-0">
                 <tr>
                   <th className="px-4 py-3 text-sm font-medium text-gray-500">Time</th>
                   <th className="px-4 py-3 text-sm font-medium text-gray-500">User ID</th>
                   <th className="px-4 py-3 text-sm font-medium text-gray-500">User Message</th>
                   <th className="px-4 py-3 text-sm font-medium text-gray-500">Bot Response</th>
-                  <th className="px-4 py-3 text-sm font-medium text-gray-500 text-right">Response Time</th>
+                  <th className="px-4 py-3 text-sm font-medium text-gray-500 text-right">
+                    Response Time
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -140,9 +124,9 @@ export function ChatLogs() {
                   logs.map((log, i) => (
                     <tr key={i} className="border-b hover:bg-gray-50">
                       <td className="px-4 py-3 text-sm text-gray-500">
-                        {formatTimeAgo(log.timestamp)}
+                        {formatTime(log.timestamp)}
                       </td>
-                      <td className="px-4 py-3 text-sm">{log.username}</td>
+                      <td className="px-4 py-3 text-sm">{log.user_id}</td>
                       <td className="px-4 py-3 text-sm max-w-[300px] truncate">
                         {log.message_text}
                       </td>
@@ -161,5 +145,5 @@ export function ChatLogs() {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

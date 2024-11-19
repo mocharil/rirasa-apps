@@ -38,7 +38,7 @@ interface NetworkData {
 interface Tweet {
   username: string;
   full_text: string;
-  created_at: string;
+  date: string;
   topic_classification: string;
   sentiment: string;
   urgency_level: number;
@@ -323,7 +323,7 @@ export function NetworkAnalysis({ data }: NetworkAnalysisProps) {
                             </span>
                           )}
                           <span className="text-gray-500 text-sm">
-                            {new Date(tweet.created_at).toLocaleString()}
+                            {new Date(tweet.date).toLocaleString()}
                           </span>
                         </div>
                       </div>

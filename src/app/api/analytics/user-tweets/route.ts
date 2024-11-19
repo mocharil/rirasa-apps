@@ -5,7 +5,7 @@ import type { SortOrder } from '@elastic/elasticsearch/lib/api/types';
 interface TweetSource {
   username: string;
   full_text: string;
-  created_at: string;
+  date: string;
   topic_classification?: string;
   sentiment?: string;
   urgency_level?: number;
@@ -16,7 +16,7 @@ interface TweetSource {
 }
 
 const client = new Client({
-    node: 'http://57.155.112.231:9200',
+    node: 'http://localhost:9200',
     requestTimeout: 30000,
     maxRetries: 3,
     tls: {
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
       _source: [
         'username',
         'full_text',
-        'created_at',
+        'date',
         'topic_classification',
         'sentiment',
         'urgency_level',
@@ -104,8 +104,8 @@ export async function GET(request: Request) {
             minimum_should_match: 1
           }
         },
-        sort: [{ 'date': { order: 'desc' as SortOrder } }],
-        size: 20
+        sort: [{ 'urgency_level': { order: 'desc' as SortOrder } }],
+        size: 30
       }
     };
 
@@ -130,7 +130,7 @@ export async function GET(request: Request) {
       return {
         username: source.username,
         full_text: source.full_text,
-        created_at: source.created_at,
+        date: source.date,
         topic_classification: source.topic_classification || 'Unclassified',
         sentiment: source.sentiment || 'Neutral',
         urgency_level: source.urgency_level || 0,

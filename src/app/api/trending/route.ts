@@ -3,7 +3,7 @@ import { Client } from '@elastic/elasticsearch'
 import { type NextRequest } from 'next/server'
 
 const client = new Client({
-  node: 'http://57.155.112.231:9200'
+  node: 'http://localhost:9200'
 })
 
 export async function GET(request: NextRequest) {

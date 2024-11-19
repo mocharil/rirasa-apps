@@ -4,7 +4,7 @@ import type { Node, Edge } from 'reactflow';
 import { Client } from '@elastic/elasticsearch';
 
 const client = new Client({
-  node: 'http://57.155.112.231:9200'
+  node: 'http://localhost:9200'
 });
 
 export async function GET(request: Request) {
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
               {
                 range: {
                   date: {
-                    gte: "now-7d/d",
+                    gte: "now-17d/d",
                     lte: "now"
                   }
                 }
