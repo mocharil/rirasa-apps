@@ -1,188 +1,216 @@
+// src/components/dashboard/citizen-engagement/citizen-engagement-view.tsx
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { MessageCircle, RefreshCw, TrendingUp, User, Clock, LucideIcon } from "lucide-react";
-import { ChatLogs } from "./chat-logs";
-
-interface EngagementStats {
-  activeUsers: number;
-  dailyInteractions: number;
-  responseRate: number;
-  avgResponseTime: number;
-}
-
-interface StatsCardProps {
-  title: string;
-  value: string | number;
-  icon: LucideIcon;
-  loading: boolean;
-  trend?: number;
-}
-
-function StatsCard({ title, value, icon: Icon, loading, trend }: StatsCardProps) {
-  return (
-    <div className="space-y-3 p-5 bg-white/70 backdrop-blur-lg rounded-lg border border-gray-200 shadow-lg hover:scale-105 transition-transform">
-      <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-600">{title}</p>
-        <Icon className="w-6 h-6 text-gray-500" />
-      </div>
-      {loading ? (
-        <div className="h-8 bg-gray-200 rounded animate-pulse" />
-      ) : (
-        <div className="flex items-end justify-between">
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          {trend && (
-            <span
-              className={`text-sm font-medium ${
-                trend > 0 ? "text-green-500" : "text-red-500"
-              }`}
-            >
-              {trend > 0 ? `▲ ${trend}%` : `▼ ${Math.abs(trend)}%`}
-            </span>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, Users, Clock, Smile, Loader2, BookOpen, Binoculars } from "lucide-react";
+import { StatsCard } from "@/components/dashboard/stats-card";
+import { ResponseTrends } from "./analytics/response-trends";
+import { TopicHeatmap } from "./analytics/topic-heatmap";
+import { EnhancedChatLogs } from "./enhanced-chat-logs";
+import KnowledgeBaseSection from './knowledge-base-section';
 
 export function CitizenEngagementView() {
-  const [stats, setStats] = useState<EngagementStats>({
-    activeUsers: 0,
-    dailyInteractions: 0,
-    responseRate: 0,
-    avgResponseTime: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [metrics, setMetrics] = useState({
+    criticalIssues: 0,
+    activeSessions: 0,
+    responseRate: 0,
+    averageResponseTime: 0,
+    sentimentScore: 0,
+    trendsData: [],
+  });
+  const [topics, setTopics] = useState([]);
+  const [chatLogs, setChatLogs] = useState([]);
+  const [newKnowledge, setNewKnowledge] = useState({
+    title: "",
+    content: "",
+    topic_classification: "",
+    keywords: [],
+    file: undefined,
+  });
 
-  const fetchStats = async () => {
+  const fetchData = async () => {
     try {
-      const response = await fetch("/api/engagement");
-      if (!response.ok) {
-        throw new Error("Failed to fetch statistics");
-      }
-      const data = await response.json();
-      setStats(data);
+      setIsLoading(true);
       setError(null);
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-      setError("Failed to load statistics");
+
+      const metricsResponse = await fetch("/api/engagement");
+      const metricsData = await metricsResponse.json();
+
+      const topicsResponse = await fetch("/api/analytics/topics");
+      const topicsData = await topicsResponse.json();
+
+      const logsResponse = await fetch("/api/engagement/logs");
+      const logsData = await logsResponse.json();
+
+      setMetrics({
+        criticalIssues: metricsData.criticalIssues || 0,
+        activeSessions: metricsData.activeSessions || 0,
+        responseRate: metricsData.responseRate || 0,
+        averageResponseTime: metricsData.averageResponseTime || 0,
+        sentimentScore: metricsData.sentimentScore || 0,
+        trendsData: metricsData.trendsData || [],
+      });
+
+      setTopics(topicsData.topics || []);
+      setChatLogs(logsData.logs || []);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An unexpected error occurred");
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchStats();
-    const interval = setInterval(fetchStats, 60000);
-    return () => clearInterval(interval);
+    fetchData();
+    const intervalId = setInterval(fetchData, 600000);
+    return () => clearInterval(intervalId);
   }, []);
 
-  const handleRefresh = () => {
-    setLoading(true);
-    fetchStats();
+  const handleSubmitKnowledge = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append("title", newKnowledge.title);
+      formData.append("content", newKnowledge.content);
+      formData.append("topic_classification", newKnowledge.topic_classification);
+      formData.append("keywords", newKnowledge.keywords.join(", "));
+      if (newKnowledge.file) formData.append("file", newKnowledge.file);
+
+      const response = await fetch("/api/knowledge-base", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Failed to add knowledge");
+
+      setNewKnowledge({
+        title: "",
+        content: "",
+        topic_classification: "",
+        keywords: [],
+        file: undefined,
+      });
+
+      alert("Knowledge base entry added successfully");
+    } catch (err) {
+      setError("Failed to add knowledge base entry");
+    }
   };
 
-  const handleTelegramRedirect = () => {
-    window.open("https://t.me/jakarta_insight_bot", "_blank");
-  };
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
-    <div className="flex-1 space-y-8 p-8 bg-gradient-to-br from-white  min-h-screen">
-      <div className="flex items-center justify-between">
-        <h2 className="text-4xl font-extrabold tracking-tight text-gray-900">Citizen Engagement</h2>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={loading}
-          className="flex items-center bg-black text-white gap-2 border-gray-500 hover:bg-gray-100 hover:shadow-lg"
+    
+    <div className="space-y-6 p-6">
+      <h2 className = "text-3xl font-bold tracking-tight">Citizen Engagement</h2>
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="inline-flex items-center rounded-lg border bg-background p-1 text-muted-foreground">
+        <button
+          className={`inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+            activeTab === "overview"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "hover:bg-muted hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("overview")}
         >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+          
+          <Binoculars className="mr-2 h-4 w-4" />
+          Overview
+        </button>
+        <button
+          className={`inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+            activeTab === "chatLogs"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "hover:bg-muted hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("chatLogs")}
+        >
+          <Users className="mr-2 h-4 w-4" />
+          Chat Logs
+        </button>
+        <button
+          className={`inline-flex items-center justify-center rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
+            activeTab === "knowledge"
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "hover:bg-muted hover:text-foreground"
+          }`}
+          onClick={() => setActiveTab("knowledge")}
+        >
+          <BookOpen className="mr-2 h-4 w-4" />
+          Knowledge Base
+        </button>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-1 lg:grid-cols-2">
-        <Card className="col-span-1 bg-white/70 backdrop-blur-lg shadow-lg border border-gray-200 transition-transform hover:scale-105">
-          <CardHeader className="flex flex-row items-center gap-6">
-            <img
-              src="/bot jaki.png"
-              alt="Bot JakSee Logo"
-              className="w-20 h-20 rounded-full shadow-md border border-gray-300"
+      <Tabs value={activeTab} onValueChange={setActiveTab} orientation="vertical">
+        <TabsContent value="overview">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <StatsCard
+              title="Critical Issues"
+              value={metrics.criticalIssues.toString()}
+              description="High urgency issues in last 7 days"
+              icon={AlertCircle}
+              color="text-red-600"
+              className="h-full"
             />
-            <div>
-              <CardTitle className="text-2xl font-bold text-gray-800">Insight Jakarta Chatbot</CardTitle>
-              <CardDescription>
-                Connect with our AI-powered chatbot to get instant information about Jakarta
-              </CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <ul className="list-disc pl-6 text-gray-600 space-y-2">
-              <li>Real-time updates about Jakarta</li>
-              <li>Quick responses to common inquiries</li>
-              <li>24/7 automated assistance</li>
-              <li>Easy access to public services information</li>
-            </ul>
-            <Button
-              onClick={handleTelegramRedirect}
-              className="w-full mt-4 bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-xl"
-            >
-              <MessageCircle className="mr-2 h-5 w-5" />
-              Chat with Bot JakSee on Telegram
-            </Button>
-          </CardContent>
-        </Card>
+            <StatsCard
+              title="Active Sessions"
+              value={metrics.activeSessions.toString()}
+              description="Unique users engaged in last 7 days"
+              icon={Users}
+              color="text-blue-600"
+              className="h-full"
+            />
+            <StatsCard
+              title="Response Rate"
+              value={`${metrics.responseRate.toFixed(1)}%`}
+              description={`Avg response time: ${metrics.averageResponseTime.toFixed(1)}s`}
+              icon={Clock}
+              color="text-green-600"
+              className="h-full"
+            />
+            <StatsCard
+              title="Sentiment Score"
+              value={metrics.sentimentScore.toFixed(1)}
+              description="Based on last 7 days conversations"
+              icon={Smile}
+              color="text-yellow-600"
+              className="h-full"
+            />
+          </div>
 
-        <Card className="col-span-1 bg-white/70 backdrop-blur-lg shadow-lg border border-gray-200 transition-transform hover:scale-105">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between text-gray-800">
-              Engagement Statistics
-              {error && <span className="text-sm text-red-500">{error}</span>}
-            </CardTitle>
-            <CardDescription className="text-gray-600">
-              Overview of citizen interactions with our chatbot
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
-              <StatsCard
-                title="Active Users"
-                value={stats.activeUsers.toLocaleString()}
-                icon={User}
-                loading={loading}
-                trend={5}
-              />
-              <StatsCard
-                title="Daily Interactions"
-                value={stats.dailyInteractions.toLocaleString()}
-                icon={MessageCircle}
-                loading={loading}
-                trend={-3}
-              />
-              <StatsCard
-                title="Response Rate"
-                value={`${stats.responseRate}%`}
-                icon={TrendingUp}
-                loading={loading}
-                trend={8}
-              />
-              <StatsCard
-                title="Avg. Response Time"
-                value={`${stats.avgResponseTime}s`}
-                icon={Clock}
-                loading={loading}
-              />
-            </div>
-          </CardContent>
-        </Card>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ResponseTrends data={metrics.trendsData} />
+            <TopicHeatmap topics={topics} />
+          </div>
+        </TabsContent>
 
-        <ChatLogs />
-      </div>
+        <TabsContent value="chatLogs">
+          <EnhancedChatLogs logs={chatLogs} />
+        </TabsContent>
+
+        <TabsContent value="knowledge">
+<KnowledgeBaseSection />
+</TabsContent>
+
+      </Tabs>
     </div>
   );
 }

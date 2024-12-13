@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from "@/contexts/auth-context";
 import TermsModal from './terms-modal';
+import Cookies from 'js-cookie';  // Tambahkan import ini
 
 const LoginPage = () => {
   const router = useRouter();
@@ -24,15 +25,27 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
-
+  
     try {
       const success = await login(username, password);
+  
       if (success) {
-        router.push('/dashboard');
+        // Tunggu sebentar untuk memastikan cookie sudah ter-set
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const authCookie = Cookies.get('isAuthenticated');
+        
+        if (authCookie === 'true') {
+          // Set state dan cookie terlebih dahulu
+          window.location.href = '/dashboard'; // Gunakan window.location.href daripada router.push
+        } else {
+          setError('Authentication error. Please try again.');
+        }
       } else {
         setError('Invalid credentials. Please try again.');
       }
     } catch (err) {
+      console.error('Login: Error occurred:', err);
       setError('An error occurred. Please try again later.');
     } finally {
       setIsLoading(false);

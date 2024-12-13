@@ -1,11 +1,7 @@
 // src/app/api/dashboard/route.ts
 
 import { NextResponse } from 'next/server'
-import { Client } from '@elastic/elasticsearch'
-
-const client = new Client({
-  node: 'http://localhost:9200'
-})
+import { client } from '@/lib/elasticsearch'
 
 interface NewsMetrics {
   totalArticles: number;

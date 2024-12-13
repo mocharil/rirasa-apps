@@ -1,16 +1,21 @@
-"use client"
+"use client";
 
-import { Badge } from "@/components/ui/badge"
+// src/components/dashboard/tweet-card.tsx
+import { Card } from "@/components/ui/card";
 import {
-  Target,
-  MapPin,
-  AlertTriangle,
-  MessageCircle,
+  MessageSquare,
   Heart,
-  Repeat,
+  Repeat2,
   Eye,
-  TwitterIcon, // Import Twitter icon for default avatar
-} from "lucide-react"
+  AlertTriangle,
+  Users,
+  MapPin,
+  ExternalLink,
+  Tag
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface TweetItem {
   _source: {
@@ -35,8 +40,6 @@ interface TweetItem {
 }
 
 export function TweetCard({ item }: { item: TweetItem }) {
-  if (!item?._source) return null;
-
   const {
     full_text,
     link_post,
@@ -50,121 +53,143 @@ export function TweetCard({ item }: { item: TweetItem }) {
     urgency_level,
     target_audience,
     affected_region,
-    favorite_count,
-    retweet_count,
-    reply_count,
-    views_count,
+    favorite_count = 0,
+    retweet_count = 0,
+    reply_count = 0,
+    views_count = 0,
   } = item._source;
 
+  const getSentimentColor = (sentiment: string) => {
+    const sentimentMap = {
+      'Positive': 'bg-green-100 text-green-800 border-green-200',
+      'Negative': 'bg-red-100 text-red-800 border-red-200',
+      'Neutral': 'bg-gray-100 text-gray-800 border-gray-200'
+    };
+    return sentimentMap[sentiment as keyof typeof sentimentMap] || sentimentMap.Neutral;
+  };
+
+  const getUrgencyColor = (level: number) => {
+    if (level >= 80) return 'bg-red-100 text-red-800 border-red-200';
+    if (level >= 50) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    return 'bg-green-100 text-green-800 border-green-200';
+  };
+
   return (
-    <div className="bg-white border rounded-lg hover:bg-gray-50 transition-all duration-200">
-      <a 
-        href={link_post} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className="block p-4"
-      >
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: "spring", stiffness: 300 }}
+    >
+      <Card className="p-4 hover:shadow-lg transition-shadow duration-200">
         {/* Header */}
-        <div className="flex items-start gap-3">
-          {/* Avatar */}
-          <div className="flex-shrink-0">
-            {link_image_url ? (
-              <img
-                src={link_image_url}
-                alt={name}
-                className="w-10 h-10 rounded-full"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <TwitterIcon className="w-6 h-6 text-blue-500" />
-              </div>
-            )}
+        <div className="flex items-start gap-3 mb-3">
+          {/* Profile Image */}
+          <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border border-gray-200">
+            <img
+              src={link_image_url || "/jakarta-insight-logo.png"}
+              alt={name}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.src = "/jakarta-insight-logo.png";
+              }}
+            />
           </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            {/* User Info */}
-            <div className="flex items-center gap-2">
-              <span className="font-semibold truncate">{name}</span>
-              <span className="text-gray-500 text-sm truncate">{username}</span>
-              {affected_region && (
-                <span className="text-gray-500 text-sm flex items-center gap-1">
-                  <MapPin className="w-3 h-3" />
-                  {affected_region}
-                </span>
-              )}
-            </div>
-
-            {/* Tweet Text */}
-            <p className="mt-1 text-[15px] whitespace-pre-wrap break-words">
-              {full_text}
-            </p>
-
-            {/* Engagement Stats */}
-            <div className="flex items-center gap-4 mt-3 text-gray-500 text-sm">
-              <span className="flex items-center gap-1">
-                <Heart className="w-4 h-4" />
-                {favorite_count || 0}
-              </span>
-              <span className="flex items-center gap-1">
-                <Repeat className="w-4 h-4" />
-                {retweet_count || 0}
-              </span>
-              <span className="flex items-center gap-1">
-                <MessageCircle className="w-4 h-4" />
-                {reply_count || 0}
-              </span>
-              <span className="flex items-center gap-1">
-                <Eye className="w-4 h-4" />
-                {views_count || 0}
-              </span>
-            </div>
-
-            {/* Classification & Metadata */}
-            <div className="flex flex-wrap gap-2 mt-3">
-              {/* Topic */}
-              <Badge variant="outline">
-                {topic_classification}
-              </Badge>
-
-              {/* Sentiment */}
-              <Badge
-                variant={
-                  sentiment?.toLowerCase() === 'positive' ? 'success' :
-                  sentiment?.toLowerCase() === 'negative' ? 'destructive' :
-                  'default'
-                }
+          {/* User Info & Date */}
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-gray-900">{name}</h3>
+                <p className="text-sm text-gray-500">@{username}</p>
+              </div>
+              <a
+                href={link_post}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 hover:text-blue-600"
+                onClick={(e) => e.stopPropagation()}
               >
-                {sentiment}
-              </Badge>
-
-              {/* Urgency */}
-              <Badge
-                variant={
-                  urgency_level > 80 ? 'destructive' :
-                  urgency_level > 50 ? 'warning' :
-                  'default'
-                }
-                className="flex items-center gap-1"
-              >
-                <AlertTriangle className="w-3 h-3" />
-                Urgency: {urgency_level}
-              </Badge>
-
-              {/* Target Audience */}
-              <Badge variant="secondary" className="flex items-center gap-1">
-                <Target className="w-3 h-3" />
-                {target_audience}
-              </Badge>
-            </div>
-
-            {/* Timestamp */}
-            <div className="mt-2 text-sm text-gray-500">
-              {date} {time}
+                <ExternalLink className="h-4 w-4" />
+              </a>
             </div>
           </div>
         </div>
-      </a>
-    </div>
-  )
+
+        {/* Tweet Content */}
+        <p className="text-gray-700 mb-4 whitespace-pre-wrap">{full_text}</p>
+
+        {/* Metrics */}
+        <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
+          <div className="flex items-center gap-1">
+            <Heart className="h-4 w-4" />
+            <span>{favorite_count.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Repeat2 className="h-4 w-4" />
+            <span>{retweet_count.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <MessageSquare className="h-4 w-4" />
+            <span>{reply_count.toLocaleString()}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Eye className="h-4 w-4" />
+            <span>{views_count.toLocaleString()}</span>
+          </div>
+        </div>
+
+        {/* Tags Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          {/* Topic */}
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Tag className="h-3 w-3" />
+            {topic_classification}
+          </Badge>
+
+          {/* Sentiment */}
+          <Badge 
+            variant="outline" 
+            className={cn("flex items-center gap-1", getSentimentColor(sentiment))}
+          >
+            {sentiment === 'Positive' && '😊'}
+            {sentiment === 'Negative' && '😞'}
+            {sentiment === 'Neutral' && '😐'}
+            {sentiment}
+          </Badge>
+
+          {/* Urgency */}
+          <Badge 
+            variant="outline"
+            className={cn("flex items-center gap-1", getUrgencyColor(urgency_level))}
+          >
+            <AlertTriangle className="h-3 w-3" />
+            Urgency: {urgency_level}
+          </Badge>
+
+          {/* Region */}
+          <Badge variant="outline" className="flex items-center gap-1">
+            <MapPin className="h-3 w-3" />
+            {affected_region}
+          </Badge>
+        </div>
+
+        {/* Additional Metadata */}
+        <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-sm text-gray-500">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            <span>{target_audience}</span>
+          </div>
+          <time className="text-xs">
+            {new Date(date).toLocaleDateString('id-ID', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+            {" "}
+            {time}
+          </time>
+        </div>
+      </Card>
+    </motion.div>
+  );
 }

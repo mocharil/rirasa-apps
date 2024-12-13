@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server'
-import { Client } from '@elastic/elasticsearch'
 import { type NextRequest } from 'next/server'
-
-const client = new Client({
-  node: 'http://localhost:9200'
-})
+import { client } from '@/lib/elasticsearch'
 
 export async function GET(request: NextRequest) {
   // Get source from query parameter

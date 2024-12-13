@@ -3,7 +3,7 @@ import { CitizenEngagementView } from "@/components/dashboard/citizen-engagement
 
 export const metadata: Metadata = {
   title: "Citizen Engagement",
-  description: "Engage with citizens through our Telegram chatbot",
+  description: "Manage and monitor citizen interactions through our platform",
 }
 
 export default function CitizenEngagementPage() {

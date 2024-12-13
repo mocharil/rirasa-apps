@@ -27,7 +27,7 @@ const TermsModal: React.FC<TermsModalProps> = ({ isOpen, onClose }) => {
             Terms of Service
           </DialogTitle>
           <DialogDescription>
-            Last updated: November 2024
+            Last updated: December 2024
           </DialogDescription>
         </DialogHeader>
         

@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
-import { Client } from '@elastic/elasticsearch';
 import type { SortOrder } from '@elastic/elasticsearch/lib/api/types';
+
+
+import { client } from '@/lib/elasticsearch'
+
 
 interface TweetSource {
   username: string;
@@ -15,14 +18,7 @@ interface TweetSource {
   hastags?: string | string[];
 }
 
-const client = new Client({
-    node: 'http://localhost:9200',
-    requestTimeout: 30000,
-    maxRetries: 3,
-    tls: {
-      rejectUnauthorized: false
-    }
-  });
+
 
 // Helper function to ensure array type
 const ensureArray = (value: unknown): string[] => {
@@ -74,7 +70,6 @@ export async function GET(request: Request) {
     const nodeType = originalUsername.startsWith('@') ? 'user/mention' :
                     originalUsername.startsWith('#') ? 'hashtag' : 'user';
 
-    console.log('Node type:', nodeType);
 
     const searchQuery = {
       index: 'twitter_jakarta',

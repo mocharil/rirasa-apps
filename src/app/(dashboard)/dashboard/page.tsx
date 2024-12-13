@@ -6,7 +6,6 @@ import { useEffect, useState, useMemo } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   AlertCircle,
-  BarChart,
   Users,
   MessageSquare,
   TrendingUp,
@@ -23,6 +22,8 @@ import { SourceTabs } from "@/components/dashboard/source-tabs"
 import { StatsCard } from "@/components/dashboard/stats-card"
 import { RootCauseAnalysis } from "@/components/dashboard/root-cause-analysis"
 import { TrendingTopics } from "@/components/dashboard/trending-topics"
+
+
 
 type DataSource = 'news' | 'twitter'
 
@@ -54,6 +55,25 @@ interface TwitterMetrics {
   avgEngagementRate: number;
 }
 
+interface FilterState {
+  dateRange: {
+    from: Date | undefined;
+    to: Date | undefined;
+  };
+  categories: string[];
+  urgencyLevel: string[];
+  sentiment: string[];
+  region: string[];
+}
+
+// Keep the existing TwitterInsight interface
+interface TwitterInsight {
+  id: string;
+  date: string;
+  total_location: Array<{ name: string; total: number }>;
+  total_hashtags: Array<{ name: string; total: number }>;
+  total_mentions: Array<{ name: string; total: number }>;
+}
 export default function DashboardPage() {
   const [activeSource, setActiveSource] = useState<DataSource>('news')
   
@@ -224,45 +244,49 @@ export default function DashboardPage() {
     fetchTrending()
   }, [activeSource])
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query)
-    
-    if (!query.trim()) {
-      setIsSearching(false)
-      setSearchResults([])
-      setTotalResults(0)
-      return
-    }
-
+  const handleSearch = async (query: string, filters: FilterState) => {
     try {
-      setIsSearching(true)
-      setSearchLoading(true)
+      setSearchLoading(true);
+      setIsSearching(true);
+  
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query,
+          filters,
           source: activeSource,
           page: pagination.currentPage,
           itemsPerPage: pagination.itemsPerPage
         })
-      })
-      const result = await response.json()
-      setSearchResults(result.hits || [])
-      setTotalResults(result.total || 0)
+      });
+  
+      if (!response.ok) {
+        throw new Error('Search request failed');
+      }
+  
+      const result = await response.json();
+      
+      if (result.error) {
+        throw new Error(result.error);
+      }
+  
+      setSearchResults(result.hits || []);
+      setTotalResults(result.total || 0);
       setPagination(prev => ({
         ...prev,
-        totalPages: Math.ceil((result.total || 0) / pagination.itemsPerPage),
-        currentPage: result.pagination?.currentPage || 1
-      }))
+        totalPages: Math.ceil((result.total || 0) / pagination.itemsPerPage)
+      }));
+  
     } catch (error) {
-      console.error('Search error:', error)
-      setSearchResults([])
-      setTotalResults(0)
+      console.error('Search error:', error);
+      setSearchResults([]);
+      setTotalResults(0);
     } finally {
-      setSearchLoading(false)
+      setSearchLoading(false);
     }
-  }
+  };
+  
 
   const handleSourceChange = (source: DataSource) => {
     setActiveSource(source)
@@ -287,35 +311,43 @@ export default function DashboardPage() {
       />
     )
   }
-
+  const [currentFilters, setCurrentFilters] = useState<FilterState>({
+    dateRange: { from: undefined, to: undefined },
+    categories: [],
+    urgencyLevel: [],
+    sentiment: [],
+    region: []
+  });
+  
   const handlePageChange = async (page: number) => {
-    setPagination(prev => ({ ...prev, currentPage: page }))
+    setPagination(prev => ({ ...prev, currentPage: page }));
     
-    if (isSearching && searchQuery) {
-      setSearchLoading(true)
+    if (isSearching) {
+      setSearchLoading(true);
       try {
         const response = await fetch('/api/search', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             query: searchQuery,
+            filters: currentFilters, // Add this state variable to store current filters
             source: activeSource,
             page: page,
             itemsPerPage: pagination.itemsPerPage
           })
-        })
-        const result = await response.json()
-        setSearchResults(result.hits || [])
-        setTotalResults(result.total || 0)
+        });
+        const result = await response.json();
+        setSearchResults(result.hits || []);
+        setTotalResults(result.total || 0);
         setPagination(prev => ({
           ...prev,
           currentPage: page,
           totalPages: Math.ceil((result.total || 0) / pagination.itemsPerPage)
-        }))
+        }));
       } catch (error) {
-        console.error('Search pagination error:', error)
+        console.error('Search pagination error:', error);
       } finally {
-        setSearchLoading(false)
+        setSearchLoading(false);
       }
     }
   }

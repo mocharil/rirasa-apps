@@ -1,7 +1,6 @@
-import { Client } from '@elastic/elasticsearch'
-import { NextResponse } from 'next/server'
+import { client } from '@/lib/elasticsearch'
+import { NextResponse } from 'next/server';
 
-// Definisikan interface untuk struktur data source
 interface ChatLog {
   user_id: string;
   username: string;
@@ -9,58 +8,67 @@ interface ChatLog {
   bot_response: string;
   timestamp: string;
   response_time_ms: number;
+  affected_region: string;
+  topic_classification: string;
+  urgency_level: number;
+  sentiment:string;
 }
 
-const client = new Client({
-  node: 'http://localhost:9200'
-})
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const searchQuery = searchParams.get('search') || ''
+    const { searchParams } = new URL(request.url);
+    const searchQuery = searchParams.get('search') || '';
 
     const query = {
       bool: {
         must: [
-          searchQuery ? {
-            multi_match: {
-              query: searchQuery,
-              fields: ['message_text', 'bot_response', 'user_id']
-            }
-          } : {
-            match_all: {}
-          }
-        ]
-      }
-    }
+          searchQuery
+            ? {
+                multi_match: {
+                  query: searchQuery,
+                  fields: ['message_text', 'bot_response', 'user_id'],
+                },
+              }
+            : {
+                match_all: {},
+              },
+        ],
+      },
+    };
 
     const response = await client.search({
       index: 'chat_interactions',
       body: {
         query,
-        sort: [
-          { timestamp: { order: 'desc' } }
-        ],
-        size: 100 // Limit to last 100 messages
-      }
-    })
+        sort: [{ timestamp: { order: 'desc' } }],
+        size: 100, // Limit to last 100 messages
+      },
+    });
 
-    const logs = response.hits.hits.map(hit => ({
-      user_id: (hit._source as ChatLog).user_id,
-      username: (hit._source as ChatLog).username,
-      message_text: (hit._source as ChatLog).message_text,
-      bot_response: (hit._source as ChatLog).bot_response,
-      timestamp: (hit._source as ChatLog).timestamp,
-      response_time_ms: (hit._source as ChatLog).response_time_ms
-    }))
+    const logs = response.hits.hits.map(hit => {
+      const source = hit._source as ChatLog;
 
-    return NextResponse.json({ logs })
+      return {
+        user_id: source.user_id,
+        username: source.username,
+        message_text: source.message_text,
+        bot_response: source.bot_response,
+        timestamp: source.timestamp,
+        response_time_ms: source.response_time_ms,
+        affected_region: source.affected_region, // Add affected_region
+        topic_classification: source.topic_classification, // Add topic_classification
+        urgency_level: source.urgency_level, // Add urgency_level
+        sentiment: source.sentiment, // Add urgency_level
+      };
+    });
+
+    return NextResponse.json({ logs });
   } catch (error) {
-    console.error('Error fetching chat logs:', error)
+    console.error('Error fetching chat logs:', error);
     return NextResponse.json(
       { error: 'Failed to fetch chat logs' },
       { status: 500 }
-    )
+    );
   }
 }

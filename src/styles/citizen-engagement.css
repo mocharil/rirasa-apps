@@ -1,0 +1,103 @@
+/* styles/citizen-engagement.css */
+
+/* Table styles */
+.chat-logs-table {
+    @apply w-full border-collapse;
+  }
+  
+  .chat-logs-table th {
+    @apply px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-gray-50;
+  }
+  
+  .chat-logs-table td {
+    @apply px-4 py-3 text-sm;
+  }
+  
+  .chat-logs-table tr {
+    @apply border-b border-gray-200;
+  }
+  
+  .chat-logs-table tbody tr:nth-child(even) {
+    @apply bg-gray-50;
+  }
+  
+  .chat-logs-table tbody tr:hover {
+    @apply bg-blue-50;
+  }
+  
+  /* Knowledge card styles */
+  .knowledge-card {
+    @apply bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-300;
+  }
+  
+  .knowledge-card-image {
+    @apply w-48 h-48 bg-gray-100 rounded-lg shrink-0 object-cover;
+  }
+  
+  .knowledge-card-content {
+    @apply flex-1 min-w-0;
+  }
+  
+  .knowledge-card-title {
+    @apply flex items-start gap-2 mb-2;
+  }
+  
+  .knowledge-card-category {
+    @apply px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full;
+  }
+  
+  .knowledge-card-metadata {
+    @apply flex flex-wrap gap-3 text-sm text-gray-500;
+  }
+  
+  /* Stats card styles */
+  .stats-card {
+    @apply bg-white p-4 rounded-lg border border-gray-100 hover:shadow-md transition-shadow;
+  }
+  
+  .stats-card-value {
+    @apply text-2xl font-bold;
+  }
+  
+  .stats-card-label {
+    @apply text-xs text-gray-500;
+  }
+  
+  /* Loading states */
+  .loading-pulse {
+    @apply animate-pulse bg-gray-200 rounded;
+  }
+  
+  /* Scroll to top button */
+  .scroll-top-button {
+    @apply fixed bottom-8 right-8 p-3 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    .knowledge-card {
+      @apply flex-col;
+    }
+  
+    .knowledge-card-image {
+      @apply w-full h-32;
+    }
+  
+    .chat-logs-table {
+      @apply text-xs;
+    }
+  }
+  
+  /* Animation for refresh icon */
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }

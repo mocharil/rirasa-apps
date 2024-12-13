@@ -1,284 +1,243 @@
-"use client"
+// src/components/dashboard/root-cause-analysis.tsx
+"use client";
 
-import { useEffect, useState } from 'react'
-import { Card } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, AlertTriangle, Lightbulb, FileText, BarChart2, ChevronDown } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
-import { useKeenSlider } from "keen-slider/react"
-import "keen-slider/keen-slider.min.css"
-import Image from "next/image"
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, ChevronLeft, ChevronRight, AlertTriangle, Lightbulb, FileText } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-interface InsightItem {
-  topic: string;
-  main_issue: string;
-  problem: string;
-  suggestion: string;
-  urgency_score: number;
-}
+const topicImages: { [key: string]: string } = {
+  "Infrastructure and Transportation": "/infrastructure_and_transportation.png",
+  "Environment and Disaster": "/environment_and_disaster.png",
+  "Public Health": "/public_health.png",
+  "Education and Culture": "/education_and_culture.png",
+  "City Planning and Housing": "/city_planning_and_housing.png",
+  "Technology and Innovation": "/technology_and_innovation.png",
+  "Safety and Crime": "/safety_and_crime.png",
+  "Social and Economy": "/social_and_economy.png",
+  "Tourism and Entertainment": "/tourism_and_entertainment.png",
+  "Ecology and Green Spaces": "/ecology_and_green_spaces.png",
+  "Government and Public Policy": "/government_and_public_policy.png"
+};
+
+const getTopicImage = (topic: string): string => {
+  return topicImages[topic] || "/jakarta-insight-logo.png";
+};
+
+// Function to format text with bold sections
+const formatText = (text: string): React.ReactNode => {
+  if (!text) return null;
+  const parts = text.split('**');
+  return parts.map((part, index) => 
+    index % 2 === 0 ? part : <strong key={index}>{part}</strong>
+  );
+};
 
 interface RootCauseProps {
   activeSource: 'news' | 'twitter';
   newsInsight: {
     date: string;
-    insight: InsightItem[];
+    insight: Array<{
+      topic: string;
+      main_issue: string;
+      problem: string;
+      suggestion: string;
+      urgency_score: number;
+    }>;
   };
   twitterInsight: {
     date: string;
-    insight: InsightItem[];
+    insight: Array<{
+      topic: string;
+      main_issue: string;
+      problem: string;
+      suggestion: string;
+      urgency_score: number;
+    }>;
   };
 }
 
-// Map topics to their corresponding image files
-const topicImages: { [key: string]: string } = {
-  "Infrastructure": "/infrastructure_and_transportation.png",
-  "Transportation": "/infrastructure_and_transportation.png",
-  "Environment": "/environment_and_disaster.png",
-  "Public Health": "/public_health.png",
-  "Education": "/education_and_culture.png",
-  "Culture": "/education_and_culture.png",
-  "Housing": "/city_planning_and_housing.png",
-  "City Planning": "/city_planning_and_housing.png",
-  "Technology": "/technology_and_innovation.png",
-  "Innovation": "/technology_and_innovation.png",
-  "Safety": "/safety_and_crime.png",
-  "Crime": "/safety_and_crime.png",
-  "Social": "/social_and_economy.png",
-  "Economy": "/social_and_economy.png",
-  "Tourism": "/tourism_and_entertainment.png",
-  "Entertainment": "/tourism_and_entertainment.png",
-  "Green Spaces": "/ecology_and_green_spaces.png",
-  "Ecology": "/ecology_and_green_spaces.png",
-  "Government": "/government_and_public_policy.png",
-  "Public Policy": "/government_and_public_policy.png"
-}
-
-const getTopicImage = (topic: string): string => {
-  const normalizedTopic = topic.toLowerCase()
-  const matchedTopic = Object.keys(topicImages).find(key => 
-    normalizedTopic.includes(key.toLowerCase())
-  )
-  return matchedTopic 
-    ? topicImages[matchedTopic] 
-    : "/jakarta-insight-logo.png"
-}
-
-// Helper function untuk memformat teks
-const formatText = (text: string): string => {
-  // Ganti newlines dengan <br> dan buat bold text yang dibungkus **
-  return text
-    .split('\n')
-    .join('<br>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-};
-
 export function RootCauseAnalysis({ activeSource, newsInsight, twitterInsight }: RootCauseProps) {
-  const [currentSlide, setCurrentSlide] = useState(0)
-  const [expanded, setExpanded] = useState(false)
-  const insights = activeSource === 'news' ? newsInsight.insight : twitterInsight.insight
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
-    initial: 0,
-    slides: {
-      perView: 1,
-      spacing: 16,
-    },
-    slideChanged(slider) {
-      setCurrentSlide(slider.track.details.rel)
-    },
-    loop: true,
-    mode: "free-snap",
-  })
+  const insights = activeSource === 'news' ? newsInsight : twitterInsight;
+  const currentInsight = insights.insight[currentIndex];
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (instanceRef.current && !expanded) {
-        instanceRef.current.next()
-      }
-    }, 10000)
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % insights.insight.length);
+  };
 
-    return () => clearInterval(interval)
-  }, [instanceRef, expanded])
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + insights.insight.length) % insights.insight.length);
+  };
 
-  const handleExpandClick = (e: React.MouseEvent) => {
-    setExpanded(!expanded)
-  }
-
-  const handleCarouselClick = (e: React.MouseEvent) => {
-    e.stopPropagation() // Prevent card expansion when interacting with carousel
-  }
+  const getUrgencyColor = (score: number) => {
+    if (score >= 80) return "bg-red-500";
+    if (score >= 60) return "bg-yellow-500";
+    return "bg-green-500";
+  };
 
   return (
     <Card 
-      className={`bg-[#f2c0b8] text-black overflow-hidden relative transition-all duration-300 ${expanded ? 'h-auto' : 'h-[280px]'} cursor-pointer hover:bg-[#edb5ad]`}
+      onClick={() => setIsExpanded(!isExpanded)}
+      className={cn(
+        "relative overflow-hidden transition-all duration-300 cursor-pointer",
+        "bg-gradient-to-br from-[#FFF1F1] to-[#FFE4E4]",
+        "hover:shadow-lg border-none",
+        isExpanded ? "h-auto" : "h-[330px]"
+      )}
     >
-      <div 
-        className="p-6 h-full"
-        onClick={handleExpandClick}
-      >
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-grid-pattern opacity-[0.03]" />
+
+      {/* Main Content */}
+      <div className="relative p-6 space-y-4">
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <BarChart2 className="h-5 w-5" />
-            <h2 className="text-xl font-semibold">Root Cause Analysis</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/50 rounded-lg">
+              <FileText className="h-5 w-5 text-red-500" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold">Root Cause Analysis</h2>
+              <p className="text-sm text-gray-600">AI-powered insights from {activeSource} data</p>
+            </div>
           </div>
-          <ChevronDown 
-            className={`h-5 w-5 transition-transform duration-300 ${
-              expanded ? 'rotate-180' : ''
-            }`}
-          />
+          <motion.div
+            animate={{ rotate: isExpanded ? 180 : 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <ChevronDown className="h-5 w-5 text-gray-500" />
+          </motion.div>
         </div>
 
-        {/* Carousel Container */}
-        <div className="relative" onClick={handleCarouselClick}>
-          <div ref={sliderRef} className="keen-slider">
-            {insights.map((item, index) => (
-              <div 
-                key={index} 
-                className="keen-slider__slide"
-              >
-                <CompactInsightCard 
-                  item={item} 
-                  expanded={expanded}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentIndex}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="relative"
+          >
+            {/* Topic and Image Section */}
+            <div className="flex gap-6">
+              <div className="relative w-64 h-48 rounded-lg overflow-hidden">
+                <img
+                  src={getTopicImage(currentInsight?.topic)}
+                  alt={currentInsight?.topic}
+                  className="object-cover w-full h-full"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                <div className="absolute bottom-3 left-3 right-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-3 py-1 bg-black/70 text-white text-sm rounded-full">
+                      {currentInsight?.topic}
+                    </span>
+                    <span className={cn(
+                      "px-2 py-1 rounded-full text-white text-xs",
+                      getUrgencyColor(currentInsight?.urgency_score || 0)
+                    )}>
+                      Urgency: {currentInsight?.urgency_score}
+                    </span>
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
 
-          {/* Navigation Buttons */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              instanceRef.current?.prev()
-            }}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 bg-black/10 rounded-full p-2 backdrop-blur-sm hover:bg-black/20 transition-colors z-10"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              instanceRef.current?.next()
-            }}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 bg-black/10 rounded-full p-2 backdrop-blur-sm hover:bg-black/20 transition-colors z-10"
-          >
-            <ChevronRight className="h-6 w-6" />
-          </button>
+              {/* Main Content */}
+              <div className="flex-1 space-y-4">
+                {/* Main Issue */}
+                <div>
+                  <div className="flex items-center gap-2 text-gray-700 font-medium mb-2">
+                    <FileText className="h-4 w-4" />
+                    Main Issue
+                  </div>
+                  <p className="text-gray-600">
+                    {formatText(currentInsight?.main_issue)}
+                  </p>
+                </div>
 
-          {/* Dots */}
-          <div 
-            className="flex justify-center gap-2 mt-4" 
-            onClick={e => e.stopPropagation()}
-          >
-            {insights.map((_, idx) => (
+                {isExpanded && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="space-y-4"
+                  >
+                    {/* Problem */}
+                    <div>
+                      <div className="flex items-center gap-2 text-gray-700 font-medium mb-2">
+                        <AlertTriangle className="h-4 w-4 text-red-500" />
+                        Problem
+                      </div>
+                      <ul className="space-y-2 text-gray-600">
+                        {currentInsight?.problem.split('\n').map((item, index) => (
+                          <li key={index} className="flex items-start gap-2">
+                            <span className="h-1.5 w-1.5 rounded-full bg-red-500 mt-2 flex-shrink-0" />
+                            <span>{formatText(item)}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* Suggestion */}
+                    <div>
+                      <div className="flex items-center gap-2 text-gray-700 font-medium mb-2">
+                        <Lightbulb className="h-4 w-4 text-yellow-500" />
+                        Suggestion
+                      </div>
+                      <p className="text-gray-600">
+                        {formatText(currentInsight?.suggestion)}
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
+            {/* Navigation Controls */}
+            <div className="absolute -left-3 top-1/2 -translate-y-1/2 flex gap-2">
               <button
-                key={idx}
                 onClick={(e) => {
-                  e.stopPropagation()
-                  instanceRef.current?.moveToIdx(idx)
+                  e.stopPropagation();
+                  handlePrevious();
                 }}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  currentSlide === idx ? 'bg-black' : 'bg-black/30'
-                }`}
-              />
-            ))}
-          </div>
+                className="p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="absolute -right-3 top-1/2 -translate-y-1/2 flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleNext();
+                }}
+                className="p-2 rounded-full bg-white/80 backdrop-blur-sm shadow-lg hover:bg-white transition-colors"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Pagination Dots */}
+        <div className="flex justify-center gap-1">
+          {insights.insight.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentIndex(idx);
+              }}
+              className={cn(
+                "w-2 h-2 rounded-full transition-all duration-300",
+                currentIndex === idx ? "bg-red-500 w-4" : "bg-gray-300 hover:bg-gray-400"
+              )}
+            />
+          ))}
         </div>
       </div>
     </Card>
-  )
-}
-
-function CompactInsightCard({ item, expanded }: { item: InsightItem; expanded: boolean }) {
-  const topicImage = getTopicImage(item.topic)
-
-  return (
-    <div 
-      className="bg-white/10 rounded-lg p-6 backdrop-blur-sm"
-      onClick={e => e.stopPropagation()}
-    >
-      <div className={`flex gap-6 transition-all duration-300 ${expanded ? 'flex-row' : 'flex-row items-center'}`}>
-        {/* Image Section */}
-        <div className={`relative flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 ${
-          expanded ? 'w-80 h-64' : 'w-40 h-32'
-        }`}>
-          <Image
-            src={topicImage}
-            alt={item.topic}
-            fill
-            className="object-cover"
-          />
-        </div>
-
-        {/* Content Section */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between mb-4">
-            <Badge variant="outline" className="bg-[#292625] text-white border-none text-xl">
-              {item.topic}
-            </Badge>
-            <Badge 
-              variant="outline" 
-              className={`flex items-center gap-1 ${
-                item.urgency_score >= 80 ? 'bg-red-500/20' :
-                item.urgency_score >= 60 ? 'bg-yellow-500/20' :
-                'bg-green-500/20'
-              } bg-[#292625] text-white border-none`}
-            >
-              <AlertTriangle className="h-3 w-3" />
-              Urgency: {item.urgency_score}
-            </Badge>
-          </div>
-
-          {!expanded ? (
-            // Compact View
-            <div>
-              <div className="flex items-center gap-1 text-black/80 text-sl font-bold mb-1">
-                <FileText className="h-6 w-auto" />
-                Main Issue
-              </div>
-              <p 
-                className="text-sm leading-relaxed line-clamp-2"
-                dangerouslySetInnerHTML={{ __html: formatText(item.main_issue) }}
-              />
-            </div>
-          ) : (
-            // Expanded View
-            <div className="grid gap-4">
-              <div>
-                <div className="flex items-center gap-1 text-black/80 text-sl font-bold mb-1">
-                  <FileText className="h-6 w-auto" />
-                  Main Issue
-                </div>
-                <p 
-                  className="text-base leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: formatText(item.main_issue) }}
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1 text-black/80 text-sl font-bold mb-1">
-                  <AlertTriangle className="h-6 w-auto" />
-                  Problem
-                </div>
-                <p 
-                  className="text-base leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: formatText(item.problem) }}
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center gap-1 text-black/80 text-sl font-bold mb-1">
-                  <Lightbulb className="h-6 w-auto" />
-                  Suggestion
-                </div>
-                <p 
-                  className="text-base leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: formatText(item.suggestion) }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  )
+  );
 }

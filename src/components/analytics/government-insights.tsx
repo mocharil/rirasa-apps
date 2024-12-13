@@ -1,421 +1,314 @@
+//src/components/analytics/government-insights.tsx
 "use client";
 
-import { Card, CardContent } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { 
-  LineChart, Line, BarChart, Bar, AreaChart, Area,
+  LineChart, Line, BarChart, Bar, PieChart, Pie,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
-  ResponsiveContainer, Cell , LabelList
+  ResponsiveContainer, Cell
 } from 'recharts';
-
 import { 
   AlertCircle, Users, Building2, MessageSquare, 
   TrendingUp, BarChart2, Activity 
 } from 'lucide-react';
 import { JakartaMap } from '@/components/maps/jakarta-map';
 
-// Define proper TypeScript interfaces
-interface SentimentTrend {
-  date: string;
-  positive: number;
-  negative: number;
-  neutral: number;
-}
+// Interface definitions remain the same...
 
-interface TopIssue {
-  topic: string;
-  count: number;
-  urgency: number;
-}
-
-interface DepartmentMetric {
-  department: string;
-  mentions: number;
-}
-
-interface RegionalDistribution {
-  region: string;
-  value: number;
-}
-
-interface AnalyticsData {
-  publicIssuesCount: number;
-  citizenReach: number;
-  activeDiscussions: number;
-  totalTweets: number;
-  criticalTopicsCount: number;
-  departmentMentionsCount: number;
-  weeklyChanges: {
-    publicIssues: string;
-    citizenReach: string;
-    activeDiscussions: string;
-    departmentMentions: string;
-  };
-  sentimentTrends: SentimentTrend[];
-  topIssues: TopIssue[];
-  departmentMetrics: DepartmentMetric[];
-  regionalDistribution: RegionalDistribution[];
-  publicSentiment: string;
-}
+// Enhanced color scheme
+const COLORS = {
+  positive: "#10B981",  // Emerald 500
+  neutral: "#6B7280",   // Gray 500
+  negative: "#EF4444",  // Red 500
+  urgentHigh: "#DC2626", // Red 600
+  urgentMedium: "#F59E0B", // Amber 500
+  urgentLow: "#10B981", // Emerald 500,
+  regions: {
+    north: "#60A5FA",   // Blue 400
+    south: "#34D399",   // Emerald 400
+    east: "#F472B6",    // Pink 400
+    west: "#FBBF24",    // Amber 400
+    central: "#A78BFA"  // Violet 400
+  }
+};
 
 interface GovernmentInsightsProps {
-  data: AnalyticsData;
+  data: {
+    sentimentTrends: Array<{
+      date: string;
+      positive: number;
+      negative: number;
+      neutral: number;
+    }>;
+    publicSentiment: string; // Percentage as a string
+    topIssues: Array<{
+      topic: string;
+      count: number;
+      urgency: number;
+    }>;
+    regionalDistribution: Array<{
+      region: string;
+      value: number;
+    }>;
+  };
 }
 
-const COLORS = [
-  '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
-  '#FFEEAD', '#D4A5A5', '#9FA8DA', '#FFE082'
-];
-// Custom gradient colors for charts
-const gradients = {
-  positive: ["#22c55e", "#4ade80"],
-  negative: ["#ef4444", "#f87171"],
-  neutral: ["#6b7280", "#9ca3af"]
-};
-
-const CustomTooltip = ({ active, payload, label }: any) => {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-lg border border-gray-100">
-        <p className="font-medium text-gray-900"></p>
-        {payload.map((pld: any, index: number) => (
-          <p key={index} className="flex items-center gap-2 mt-1">
-            <span className="w-3 h-3 rounded-full" style={{ backgroundColor: pld.color }} />
-            <span className="text-sm font-medium" style={{ color: pld.color }}>
-              {`${pld.name}: ${pld.value.toFixed(1)} Post`}
-            </span>
-          </p>
-        ))}
-      </div>
-    );
-  }
-  return null;
-};
 
 export function GovernmentInsights({ data }: GovernmentInsightsProps) {
-  if (!data) {
-    return (
-      <div className="flex items-center justify-center p-6">
-        <Activity className="w-6 h-6 text-gray-400 animate-spin" />
-        <p className="ml-2 text-gray-500">Loading analytics data...</p>
-      </div>
-    );
-  }
+  const [selectedRegion, setSelectedRegion] = useState<string | null>(null);
 
-  const cardVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 20,
-      }
-    }
-  };
+  const renderSentimentTrends = () => (
+    <Card className="hover:shadow-xl transition-transform duration-300 border border-gray-200 rounded-lg bg-white">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+          <TrendingUp className="h-5 w-5 text-emerald-500" />
+          Public Sentiment Analysis
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 gap-8">
+          {/* Trend Chart */}
+          <div className="h-[300px] p-4 rounded-lg bg-gray-50 shadow-inner">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={data.sentimentTrends}>
+                <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.2} stroke="#d1d5db" />
+                <XAxis
+                  dataKey="date"
+                  fontSize={12}
+                  tickFormatter={(date) =>
+                    new Date(date).toLocaleDateString('id-ID', { day: '2-digit', month: 'short' })
+                  }
+                  tick={{ fill: '#6b7280', fontWeight: '500' }}
+                />
+                <YAxis
+                  fontSize={12}
+                  tick={{ fill: '#6b7280', fontWeight: '500' }}
+                  width={40}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                    padding: '10px',
+                  }}
+                  formatter={(value, name) => {
+                    const formattedName = typeof name === 'string'
+                      ? name.charAt(0).toUpperCase() + name.slice(1)
+                      : name; // Handle non-string cases
+                    return [`${value}`, formattedName];
+                  }}
+                  labelStyle={{ color: '#374151', fontWeight: '500' }}
+                />
+                <Legend
+                  wrapperStyle={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: '500',
+                    fontSize: '12px',
+                    fill: '#374151',
+                  }}
+                  iconSize={12}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="positive"
+                  stroke="#10b981"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#10b981' }}
+                  activeDot={{ r: 6, fill: '#10b981', strokeWidth: 2 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="negative"
+                  stroke="#ef4444"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#ef4444' }}
+                  activeDot={{ r: 6, fill: '#ef4444', strokeWidth: 2 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="neutral"
+                  stroke="#6b7280"
+                  strokeWidth={3}
+                  dot={{ r: 4, fill: '#6b7280' }}
+                  activeDot={{ r: 6, fill: '#6b7280', strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+  
+          {/* Donut Chart */}
+          <div className="h-[300px] p-4 rounded-lg bg-gray-50 shadow-inner">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Positive', value: parseFloat(data.publicSentiment) },
+                    { name: 'Neutral', value: 100 - parseFloat(data.publicSentiment) - 20 },
+                    { name: 'Negative', value: 20 },
+                  ]}
+                  innerRadius={70}
+                  outerRadius={100}
+                  paddingAngle={5}
+                  dataKey="value"
+                  startAngle={90}
+                  endAngle={450}
+                  isAnimationActive
+                >
+                  <Cell fill="#10b981" />
+                  <Cell fill="#6b7280" />
+                  <Cell fill="#ef4444" />
+                </Pie>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#ffffff',
+                    borderRadius: '12px',
+                    border: '1px solid #e5e7eb',
+                    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                    padding: '10px',
+                  }}
+                  formatter={(value, name) => [`${value}%`, name]}
+                  labelStyle={{ color: '#374151', fontWeight: '500' }}
+                />
+                <Legend
+                  wrapperStyle={{
+                    fontFamily: 'Inter, sans-serif',
+                    fontWeight: '500',
+                    fontSize: '12px',
+                    fill: '#374151',
+                    marginTop: '20px',
+                  }}
+                  iconType="circle"
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderPriorityIssues = () => (
+    <Card className="hover:shadow-xl transition-transform duration-300 border border-gray-300 rounded-lg bg-white">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-800">
+          <AlertCircle className="h-5 w-5 text-red-600" />
+          Priority Issues
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="relative h-[350px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart 
+              data={data.topIssues}
+              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              barSize={24}
+            >
+              <CartesianGrid strokeDasharray="3 3" opacity={0.3} stroke="#e5e7eb" />
+              <XAxis 
+                dataKey="topic" 
+                angle={-45}
+                textAnchor="end"
+                height={70}
+                interval={0}
+                fontSize={12}
+                style={{
+                  fontFamily: 'Inter, sans-serif',
+                  fontWeight: '500',
+                  fill: '#4b5563',
+                }}
+              />
+              <YAxis 
+                tick={{ fontSize: 12, fill: '#4b5563', fontWeight: '500' }}
+                style={{ fontFamily: 'Inter, sans-serif' }}
+              />
+              <Tooltip
+                content={({ payload, label }) => {
+                  if (payload && payload.length) {
+                    const { count, urgency } = payload[0].payload;
+                    return (
+                      <div className="p-3 bg-white border border-gray-300 rounded shadow-md">
+                        <p className="text-sm font-medium text-gray-800">{label}</p>
+                        <p className="text-sm text-gray-600">Count: <span className="font-semibold">{count}</span></p>
+                        <p className="text-sm text-gray-600">Urgency Score: <span className="font-semibold">{urgency}</span></p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+                wrapperStyle={{
+                  outline: 'none',
+                }}
+              />
+              <Bar dataKey="count">
+                {data.topIssues.map((entry, index) => {
+                  // Logic to determine bar color based on urgency score
+                  let fillColor;
+                  if (entry.urgency > 70) {
+                    fillColor = '#ef4444'; // High urgency (Red)
+                  } else if (entry.urgency > 40) {
+                    fillColor = '#f59e0b'; // Medium urgency (Yellow)
+                  } else {
+                    fillColor = '#10b981'; // Low urgency (Green)
+                  }
+                  return <Cell key={`cell-${index}`} fill={fillColor} />;
+                })}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-6 flex justify-between text-sm text-gray-600">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-red-500"></div>
+            High Urgency
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+            Medium Urgency
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-green-500"></div>
+            Low Urgency
+          </div>
+        </div>
+      </CardContent>
+      </Card>
+);
+  const renderRegionalDistribution = () => (
+    <Card className="hover:shadow-lg transition-all duration-300">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Building2 className="h-5 w-5 text-blue-500" />
+          Regional Distribution
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[400px] relative">
+          <JakartaMap 
+            data={data.regionalDistribution}
+          />
+
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <motion.div 
-      className="space-y-6 p-6"
-      initial="hidden"
-      animate="visible"
-      variants={{
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: { staggerChildren: 0.1 }
-        }
-      }}
+      className="p-6 space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
     >
-      {/* Charts Grid */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Sentiment Trends */}
-        <motion.div variants={cardVariants}>
-          <Card className="hover:shadow-xl transition-all duration-300">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-medium flex items-center gap-2">
-                    <TrendingUp className="h-5 w-5 text-emerald-500" />
-                    Public Sentiment Trends
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Daily sentiment analysis from social media
-                  </p>
-                </div>
-              </div>
-              <div className="h-80">
-                <ResponsiveContainer>
-                  <AreaChart 
-                    data={data.sentimentTrends}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 5 }}
-                  >
-                    <defs>
-                      {Object.entries(gradients).map(([key, [startColor, endColor]]) => (
-                        <linearGradient key={key} id={`gradient${key}`} x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={startColor} stopOpacity={0.8}/>
-                          <stop offset="95%" stopColor={endColor} stopOpacity={0.1}/>
-                        </linearGradient>
-                      ))}
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis 
-                      dataKey="date" 
-                      tickFormatter={(value) => new Date(value).toLocaleDateString('id-ID', { weekday: 'short' })}
-                      fontSize={12}
-                      stroke="#6b7280"
-                    />
-                    <YAxis 
-                      fontSize={12}
-                      stroke="#6b7280"
-                      tickFormatter={(value) => `${value}%`}
-                    />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend 
-                      verticalAlign="top"
-                      height={36}
-                      formatter={(value) => (
-                        <span className="text-sm font-medium">{value}</span>
-                      )}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="positive"
-                      name="Positive"
-                      stroke={gradients.positive[0]}
-                      fill={`url(#gradientpositive)`}
-                      strokeWidth={2}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="negative"
-                      name="Negative"
-                      stroke={gradients.negative[0]}
-                      fill={`url(#gradientnegative)`}
-                      strokeWidth={2}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="neutral"
-                      name="Neutral"
-                      stroke={gradients.neutral[0]}
-                      fill={`url(#gradientneutral)`}
-                      strokeWidth={2}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Priority Issues */}
-        <motion.div variants={cardVariants}>
-          <Card className="hover:shadow-xl transition-all duration-300">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-medium flex items-center gap-2">
-                    <AlertCircle className="h-5 w-5 text-red-500" />
-                    Priority Issues
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Top issues requiring attention
-                  </p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center text-sm text-gray-600">
-                    <span className="w-2 h-2 rounded-full bg-red-500 mr-1" />
-                    High
-                  </span>
-                  <span className="flex items-center text-sm text-gray-600">
-                    <span className="w-2 h-2 rounded-full bg-blue-500 mr-1" />
-                    Normal
-                  </span>
-                </div>
-              </div>
-              <div className="h-80">
-                <ResponsiveContainer>
-                  <BarChart 
-                    data={data.topIssues}
-                    margin={{ top: 10, right: 30, left: 0, bottom: 40 }}
-                    barCategoryGap={8}
-                  >
-                    <defs>
-                      <linearGradient id="priorityHigh" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#ef4444" stopOpacity={1}/>
-                        <stop offset="100%" stopColor="#f87171" stopOpacity={0.8}/>
-                      </linearGradient>
-                      <linearGradient id="priorityNormal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#3b82f6" stopOpacity={1}/>
-                        <stop offset="100%" stopColor="#60a5fa" stopOpacity={0.8}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis 
-                      dataKey="topic" 
-                      angle={-45}
-                      textAnchor="end"
-                      height={100}
-                      fontSize={10}
-                      stroke="#6b7280"
-                    />
-                    <YAxis fontSize={12} stroke="#6b7280" />
-                    <Tooltip 
-                      cursor={{ fill: 'rgba(0, 0, 0, 0.05)' }}
-                      content={<CustomTooltip />} 
-                    />
-                    <Bar 
-                      dataKey="count" 
-                      name="Mentions"
-                      radius={[4, 4, 0, 0]}
-                    >
-                      {data.topIssues.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`}
-                          fill={`url(#priority${entry.urgency > 70 ? 'High' : 'Normal'})`}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-      {/* Department Mentions */}
-      <motion.div variants={cardVariants}>
-          <Card className="hover:shadow-xl transition-all duration-300">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-medium flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-blue-500" />
-                    Department Mentions
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Government department activity analysis
-                  </p>
-                </div>
-              </div>
-              <div className="h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
-                    data={data.departmentMetrics}
-                    layout="vertical"
-                    margin={{
-                      top: 5,
-                      right: 50,
-                      left: 100,
-                      bottom: 5,
-                    }}
-                    barSize={20}
-                  >
-                    <defs>
-                      <linearGradient id="departmentBarColor" x1="0" y1="0" x2="1" y2="0">
-                        <stop offset="0%" stopColor="#4F46E5" stopOpacity={0.8}/>
-                        <stop offset="100%" stopColor="#818CF8" stopOpacity={0.9}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis 
-                      type="number" 
-                      domain={[0, 'dataMax + 5']}
-                      ticks={[0, 5, 10, 15, 20, 25, 30]}
-                      tickLine={false}
-                      axisLine={false}
-                      style={{
-                        fontSize: '12px',
-                        fontFamily: 'Inter',
-                      }}
-                      tick={{ fill: '#6B7280' }}
-                    />
-                    <YAxis 
-                      type="category"
-                      dataKey="department"
-                      axisLine={false}
-                      tickLine={false}
-                      style={{
-                        fontSize: '12px',
-                        fontFamily: 'Inter',
-                        fontWeight: 500,
-                      }}
-                      tick={{ fill: '#374151' }}
-                      width={90}
-                    />
-                    <CartesianGrid 
-                      strokeDasharray="3 3" 
-                      horizontal={true} 
-                      vertical={false}
-                      stroke="#E5E7EB"
-                    />
-                    <Tooltip
-                      content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          return (
-                            <div className="bg-white/90 backdrop-blur-sm px-3 py-2 rounded-lg shadow-lg border border-gray-100">
-                              <p className="text-sm font-medium text-gray-900">{label}</p>
-                              <p className="text-sm font-medium text-indigo-600">
-                                {payload[0].value} mentions
-                              </p>
-                            </div>
-                          );
-                        }
-                        return null;
-                      }}
-                    />
-                    <Bar 
-                      dataKey="mentions" 
-                      fill="url(#departmentBarColor)"
-                      radius={[0, 4, 4, 0]}
-                    >
-                      <LabelList 
-                        dataKey="mentions" 
-                        position="right"
-                        style={{
-                          fill: '#4F46E5',
-                          fontSize: '12px',
-                          fontFamily: 'Inter',
-                          fontWeight: '500'
-                        }}
-                        offset={10}
-                      />
-                      {data.departmentMetrics.map((entry, index) => (
-                        <Cell 
-                          key={`cell-${index}`}
-                          className="transition-all duration-300 hover:opacity-80"
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Regional Distribution Map */}
-        <motion.div variants={cardVariants}>
-          <Card className="hover:shadow-xl transition-all duration-300">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-lg font-medium flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-violet-500" />
-                    Regional Distribution
-                  </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    Geographic distribution of issues
-                  </p>
-                </div>
-              </div>
-              <div className="h-80">
-                <JakartaMap data={data.regionalDistribution} />
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+        {renderSentimentTrends()}
+        {renderPriorityIssues()}
+      </div>
+      <div className="grid gap-6">
+        {renderRegionalDistribution()}
       </div>
     </motion.div>
   );

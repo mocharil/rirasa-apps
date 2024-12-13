@@ -167,7 +167,7 @@ export function NetworkAnalysis({ data }: NetworkAnalysisProps) {
       setSummaryLoading(true);
       
       const response = await fetch(`/api/analytics/user-tweets?username=${encodeURIComponent(node.label)}`);
-      console.log("APIIIII")
+  
       if (!response.ok) {
         throw new Error('Failed to fetch user tweets');
       }
@@ -185,7 +185,7 @@ export function NetworkAnalysis({ data }: NetworkAnalysisProps) {
         const formattedTweets = formatTweetsForSummary(top20Tweets);
       
         const summaryResponse = (await Promise.race([
-          fetch('http://34.101.213.23:7777/summarize/', {
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/summarize/`, {
             method: 'POST',
             headers: { 
               'Content-Type': 'application/json',
@@ -380,7 +380,7 @@ export function NetworkAnalysis({ data }: NetworkAnalysisProps) {
   );
   // Main render
   return (
-    <div className={`flex gap-4 h-[800px] ${isDetailOpen ? 'pr-[400px]' : ''}`}>
+    <div className={`flex gap-4 h-[800px] ${isDetailOpen ? 'pr-[0px]' : ''}`}>
       <div className="w-full">
         <Card>
           <CardContent className="p-6">

@@ -1,10 +1,7 @@
 // src/app/api/analytics/twitter/route.ts
 import { NextResponse } from 'next/server';
-import { Client } from '@elastic/elasticsearch';
+import { client } from '@/lib/elasticsearch'
 
-const client = new Client({
-    node: 'http://localhost:9200'
-});
 
 export async function GET() {
   try {

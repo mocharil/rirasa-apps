@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
-import { Client } from '@elastic/elasticsearch'
+import { client } from '@/lib/elasticsearch'
 
-const client = new Client({
-  node: 'http://localhost:9200'
-})
 
 export async function POST(request: Request) {
   try {

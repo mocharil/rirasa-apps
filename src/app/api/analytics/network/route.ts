@@ -1,17 +1,14 @@
 // src/app/api/analytics/network/route.ts
 import { NextResponse } from 'next/server';
 import type { Node, Edge } from 'reactflow';
-import { Client } from '@elastic/elasticsearch';
+// Menjadi:
+import { client } from '@/lib/elasticsearch'
 
-const client = new Client({
-  node: 'http://localhost:9200'
-});
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const region = searchParams.get('region') || 'Jakarta Pusat';
-    console.log("ambil data")
     const mustQuery = region === 'All Data' ? [] : [
         {
           match: {
@@ -53,10 +50,6 @@ export async function GET(request: Request) {
       });
       
       
-
-
-    console.log("Olah Data Network")
-    console.log(mustQuery)
 
     const nodes: Node[] = [];
     const edges: Edge[] = [];
