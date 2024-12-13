@@ -129,7 +129,7 @@ const LandingPage = () => {
             <ul className="space-y-3 text-gray-600">
               <li>Elasticsearch</li>
               <li>Next.js</li>
-              <li>Gen AI</li>
+              <li>Gemini</li>
               <li>Python</li>
               <li>Node.js</li>
             </ul>
