@@ -1,6 +1,5 @@
 // src/components/dashboard/filter-bar.tsx
 "use client"
-
 import { useState, useEffect, useCallback } from "react"
 import { Slider } from "@/components/ui/slider"
 import {
