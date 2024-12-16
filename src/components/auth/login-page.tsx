@@ -130,7 +130,7 @@ const LoginPage = () => {
     {/* Demo Credentials */}
     <div className="mt-4 space-y-1">
       <p className="text-sm font-medium text-blue-600">
-        <span className="font-bold">Username:</span> Demo
+        <span className="font-bold">Username:</span> demo
       </p>
       <p className="text-sm font-medium text-blue-600">
         <span className="font-bold">Password:</span> aiforimpact2024
