@@ -141,7 +141,7 @@ const LandingPage = () => {
             <ul className="space-y-3 text-gray-600">
               <li>
                 <a 
-                  href="https://insight-jakarta-ai.vercel.app/" 
+                  href="https://porfolio-tau-rouge.vercel.app/" 
                   className="text-blue-500 hover:underline" 
                   target="_blank" 
                   rel="noopener noreferrer"
