@@ -139,13 +139,22 @@ const LandingPage = () => {
           <div>
             <h4 className="font-semibold mb-4">Team</h4>
             <ul className="space-y-3 text-gray-600">
-              <li>Moch Aril Indra Permana</li>
+              <li>
+                <a 
+                  href="https://insight-jakarta-ai.vercel.app/" 
+                  className="text-blue-500 hover:underline" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  Moch Aril Indra Permana
+                </a>
+              </li>
               <li>Fadel Mohammad Farma</li>
             </ul>
           </div>
         </div>
       </div>
-
+        
       {/* Bottom Footer */}
       <div className="border-t border-gray-200">
         <div className="max-w-7xl mx-auto px-6 py-6">
