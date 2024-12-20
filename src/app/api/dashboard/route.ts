@@ -211,6 +211,7 @@ export async function GET(request: Request) {
           "retweet_count",
           "reply_count",
           "views_count",
+          "list_media",
           "contextual_keywords"
         ]
       }
