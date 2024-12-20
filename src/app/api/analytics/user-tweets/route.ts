@@ -83,7 +83,8 @@ export async function GET(request: Request) {
         'target_audience',
         'link_post',
         'mentions',
-        'hastags'
+        'hastags',
+        'list_media'
       ],
       body: {
         query: nodeType === 'hashtag' ? {
