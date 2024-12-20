@@ -1,6 +1,5 @@
 "use client";
 
-// src/components/dashboard/tweet-card.tsx
 import { Card } from "@/components/ui/card";
 import {
   MessageSquare,
@@ -16,6 +15,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import TwitterMediaGrid from "./TwitterMediaGrid"; // Import the separated component
 
 interface TweetItem {
   _source: {
@@ -36,6 +36,7 @@ interface TweetItem {
     retweet_count: number;
     reply_count: number;
     views_count: number;
+    list_media?: string[];
   };
 }
 
@@ -57,7 +58,9 @@ export function TweetCard({ item }: { item: TweetItem }) {
     retweet_count = 0,
     reply_count = 0,
     views_count = 0,
+    list_media = [],
   } = item._source;
+
 
   const getSentimentColor = (sentiment: string) => {
     const sentimentMap = {
@@ -83,14 +86,15 @@ export function TweetCard({ item }: { item: TweetItem }) {
         {/* Header */}
         <div className="flex items-start gap-3 mb-3">
           {/* Profile Image */}
-          <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border border-gray-200">
+          <div className="flex-shrink-0 w-12 h-12 rounded-full overflow-hidden border border-gray-200 bg-gray-50">
             <img
               src={link_image_url || "/jakarta-insight-logo.png"}
               alt={name}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover transition-opacity"
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.src = "/jakarta-insight-logo.png";
+                target.classList.add('animate-pulse');
               }}
             />
           </div>
@@ -99,14 +103,16 @@ export function TweetCard({ item }: { item: TweetItem }) {
           <div className="flex-1">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="font-semibold text-gray-900">{name}</h3>
-                <p className="text-sm text-gray-500">@{username}</p>
+                <h3 className="font-semibold text-gray-900 hover:text-gray-700 transition-colors">
+                  {name}
+                </h3>
+                <p className="text-sm text-gray-500">{username}</p>
               </div>
               <a
                 href={link_post}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-500 hover:text-blue-600"
+                className="text-blue-500 hover:text-blue-600 transition-colors p-2 hover:bg-blue-50 rounded-full"
                 onClick={(e) => e.stopPropagation()}
               >
                 <ExternalLink className="h-4 w-4" />
@@ -116,22 +122,27 @@ export function TweetCard({ item }: { item: TweetItem }) {
         </div>
 
         {/* Tweet Content */}
-        <p className="text-gray-700 mb-4 whitespace-pre-wrap">{full_text}</p>
+        <p className="text-gray-700 mb-4 whitespace-pre-wrap break-words">{full_text}</p>
+
+        {/* Media Grid - only show if list_media exists and is not empty */}
+        {list_media && list_media.length > 0 && (
+          <TwitterMediaGrid mediaUrls={list_media} />
+        )}
 
         {/* Metrics */}
         <div className="flex items-center gap-4 mb-4 text-sm text-gray-500">
-          <div className="flex items-center gap-1">
+          <button className="flex items-center gap-1 hover:text-red-500 transition-colors">
             <Heart className="h-4 w-4" />
             <span>{favorite_count.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center gap-1">
+          </button>
+          <button className="flex items-center gap-1 hover:text-green-500 transition-colors">
             <Repeat2 className="h-4 w-4" />
             <span>{retweet_count.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center gap-1">
+          </button>
+          <button className="flex items-center gap-1 hover:text-blue-500 transition-colors">
             <MessageSquare className="h-4 w-4" />
             <span>{reply_count.toLocaleString()}</span>
-          </div>
+          </button>
           <div className="flex items-center gap-1">
             <Eye className="h-4 w-4" />
             <span>{views_count.toLocaleString()}</span>
@@ -140,16 +151,14 @@ export function TweetCard({ item }: { item: TweetItem }) {
 
         {/* Tags Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-          {/* Topic */}
-          <Badge variant="outline" className="flex items-center gap-1">
+          <Badge variant="outline" className="flex items-center gap-1 hover:bg-gray-50 transition-colors">
             <Tag className="h-3 w-3" />
             {topic_classification}
           </Badge>
 
-          {/* Sentiment */}
           <Badge 
             variant="outline" 
-            className={cn("flex items-center gap-1", getSentimentColor(sentiment))}
+            className={cn("flex items-center gap-1 hover:opacity-90 transition-opacity", getSentimentColor(sentiment))}
           >
             {sentiment === 'Positive' && '😊'}
             {sentiment === 'Negative' && '😞'}
@@ -157,17 +166,15 @@ export function TweetCard({ item }: { item: TweetItem }) {
             {sentiment}
           </Badge>
 
-          {/* Urgency */}
           <Badge 
             variant="outline"
-            className={cn("flex items-center gap-1", getUrgencyColor(urgency_level))}
+            className={cn("flex items-center gap-1 hover:opacity-90 transition-opacity", getUrgencyColor(urgency_level))}
           >
             <AlertTriangle className="h-3 w-3" />
             Urgency: {urgency_level}
           </Badge>
 
-          {/* Region */}
-          <Badge variant="outline" className="flex items-center gap-1">
+          <Badge variant="outline" className="flex items-center gap-1 hover:bg-gray-50 transition-colors">
             <MapPin className="h-3 w-3" />
             {affected_region}
           </Badge>
