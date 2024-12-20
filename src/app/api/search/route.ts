@@ -104,7 +104,7 @@ export async function POST(request: Request) {
             'topic_classification',
             'urgency_level',
             'target_audience',
-            'affected_region',
+            'affected_region'
           ]
         : [
             'id',
@@ -124,6 +124,7 @@ export async function POST(request: Request) {
             'retweet_count',
             'reply_count',
             'views_count',
+            'list_media'
           ],
       query: {
         bool: {
